@@ -1,0 +1,50 @@
+Sprachbot Test mit Qwen_Qwen3-4B-Instruct-2507-IQ3_XS
+API: https://one.beezlebug.com/sprachbot/
+Output: bot-run-n3-Qwen_Qwen3-4B-Instruct-2507-IQ3_XS.txt
+Testdurchlauf Anzahl: 3
+Anzahl Fragen: 6
+Frage 1: Hallo, ich heiße Klaus!
+Frage 2: Für wen arbeitest du. Kannst du mir mehr darüber erzählen?
+Frage 3: Ich werde Morgen nächsten Montag meinen ersten Arbeitstag haben. Wann sind die Arbeitszeiten?
+Frage 4: Ok verstanden! Wie funktioniert das Flex-Time System?
+Frage 5: Wenn ich jetzt Montag um 9:00 Uhr kommen würde und dann um 16:00 Uhr gehe, ist das aber kein Problem, oder?
+Frage 6: Ok danke! Bis dann!
+=============================================
+
+==== [Test 1]=====
+[Antwort 1] (2.324s) Hallo Klaus, ich bin twi-bot, dein Assistent für Fragen zum Projektmanagement, Onboarding oder Akquise. 😊
+[Antwort 2] (1.515s) Ich arbeite für alle Kolleg:innen im Unternehmen – besonders bei Onboarding, Projektmanagement oder Akquise. Bei Fragen helfe ich gerne weiter. 😊
+[Antwort 3] (7.537s) Die Arbeitszeiten sind von Montag bis Donnerstag 08:00–17:00 Uhr und Freitag 08:00–15:00 Uhr. Die Kernarbeitszeit beginnt jeweils um 10:00 Uhr.
+[Antwort 4] (5.892s) Mit Flex-Time kannst du deine Arbeitszeiten flexibel einstellen. Du beginnst zwischen 07:00 und 10:00 Uhr und kannst das Ende der Arbeitszeit bis 17:00 Uhr (Mo–Do) oder 15:00 Uhr (Fr) verschieben.
+[Antwort 5] (8.001s) Ja, das ist kein Problem. Deine Arbeitszeit liegt innerhalb der Regelungen: 09:00–16:00 Uhr ist erlaubt.
+[Antwort 6] (3.140s) Gernesch! Bis morgen. 😊
+Gesamtlatenz: 28.409s
+
+==== [Test 2]=====
+[Antwort 1] (1.080s) Hallo Klaus, ich bin twi-bot, dein assistenter bei Fragen zu Projektmanagement, Onboarding oder Akquise. 😊
+[Antwort 2] (1.797s) Ich arbeite für alle Kolleg:innen, die Fragen zu Projektmanagement, Onboarding oder Akquise haben. Wenn du etwas genauer möchtest, sag einfach, worüber es geht! 😊
+[Antwort 3] (7.755s) Die Arbeitszeiten sind von Montag bis Donnerstag 08:00–17:00 Uhr und Freitag 08:00–15:00 Uhr. Die Kernarbeitszeit beginnt jeweils um 10:00 Uhr.
+[Antwort 4] (6.149s) Mit Flex-Time kannst du deinen Arbeitsbeginn zwischen 07:00 und 10:00 Uhr wählen und dein Ende nach 17:00 Uhr (Mo–Do) oder 15:00 Uhr (Fr) einstellen. Eine Abstimmung im Team ist vorher nötig.
+[Antwort 5] (8.726s) Ja, das ist kein Problem. Deine Arbeitszeit liegt innerhalb der Regelungen: 09:00–16:00 Uhr ist zwischen Kernarbeitszeit und Arbeitsende.
+[Antwort 6] (3.276s) Gern geschehen! Bis zum nächsten Mal. 😊
+Gesamtlatenz: 28.783s
+
+==== [Test 3]=====
+[Antwort 1] (1.432s) Hallo Klaus, ich bin twi-bot, dein assistenter bei Fragen zu Projektmanagement, Onboarding oder Akquise. Falls du eine konkrete Frage hast, helfe ich dir gerne weiter.
+[Antwort 2] (1.740s) Ich arbeite für das Unternehmen Cybob und unterstütze Fragen zu Projektmanagement, Onboarding oder Akquise. Wenn du etwas konkret möchtest, helfe ich dir gerne weiter.
+[Antwort 3] (8.090s) Die Arbeitszeiten sind von Montag bis Donnerstag 08:00–17:00 Uhr und Freitag 08:00–15:00 Uhr. Die Kernarbeitszeit beginnt jeweils um 10:00 Uhr.
+[Antwort 4] (6.450s) Das Flex-Time-System ermöglicht es, die tägliche Kernarbeitszeit um bis zu 2 Stunden zu verkürzen – beispielsweise von 08:00 bis 12:00 auf 09:00 bis 11:00. Dabei muss vorher im Team abgestimmt werden.
+[Antwort 5] (8.774s) Ja, das ist kein Problem. Deine Arbeitszeiten liegen innerhalb der Regelungen: Montag bis Donnerstag von 08:00 bis 17:00 Uhr.
+[Antwort 6] (3.409s) Gerneschätzt! Bis zum nächsten Mal.
+Gesamtlatenz: 29.895s
+
+===========================
+=== Ergebnis ===
+[Frage 1] durschnittliche Latenz: 1.612
+[Frage 2] durschnittliche Latenz: 1.684
+[Frage 3] durschnittliche Latenz: 7.794
+[Frage 4] durschnittliche Latenz: 6.164
+[Frage 5] durschnittliche Latenz: 8.500
+[Frage 6] durschnittliche Latenz: 3.275
+durschnittliche Latez pro Durchlauf: 29.029 s
+durschnittliche Latenz pro Frage 4.838 s

@@ -1,0 +1,52 @@
+Sprachbot Test mit gemma-3-1b-it-IQ4_XS
+API: https://one.beezlebug.com/sprachbot/
+Output: bot-run-n3-gemma-3-1b-it-IQ4_XS.txt
+Testdurchlauf Anzahl: 3
+Anzahl Fragen: 6
+Frage 1: Hallo, ich heiße Klaus!
+Frage 2: Für wen arbeitest du. Kannst du mir mehr darüber erzählen?
+Frage 3: Ich werde Morgen nächsten Montag meinen ersten Arbeitstag haben. Wann sind die Arbeitszeiten?
+Frage 4: Ok verstanden! Wie funktioniert das Flex-Time System?
+Frage 5: Wenn ich jetzt Montag um 9:00 Uhr kommen würde und dann um 16:00 Uhr gehe, ist das aber kein Problem, oder?
+Frage 6: Ok danke! Bis dann!
+=============================================
+
+==== [Test 1]=====
+[Antwort 1] (1.070s) Hallo Klaus, ich bin twi-bot, dein KI-Assistent von Cybob. Ich helfe dir gerne bei deinen Projektmanagement- und Onboarding-Anliegen. Lass uns gleich loslegen!
+[Antwort 2] (1.077s) Ich bin ein KI-Sprachmodell, das von Cybob entwickelt wurde. Ich unterstütze Projektmanagement-Aufgaben, helfe bei der Onboarding neuer Kollegen und unterstütze bei Akquisefragen.  Ich bin ein Werkzeug, um den Kundenerlebnis zu verbessern und die Effizienz von Cybob zu steigern.
+[Antwort 3] (2.419s) Herzlichen Glückwunsch zum ersten Arbeitstag! Die Arbeitszeiten für den nächsten Montag sind 08:00 bis 17:00 Uhr, mit einer Kernarbeitszeit von 10:00 bis 17:00 Uhr.  Die Mittagspause kann zwischen 30 und 60 Minuten betragen, beginnend um 12:00 oder 13:00 Uhr.
+[Antwort 4] (2.094s) Das Flex-Time-System ermöglicht flexible Arbeitszeiten zwischen 07:00 und 10:00 Uhr, mit einer Kernarbeitszeit von 17:00 bis 15:00 Uhr oder nach Absprache.  Es gibt eine Abstimmung im Team, um sicherzustellen, dass die Arbeitszeiten mit den Projektanforderungen übereinstimmen.
+[Antwort 5] (2.220s) Das ist kein Problem, denn Ihre Anreise um 9:00 Uhr und Ihr Rückgang um 16:00 Uhr passen perfekt in die Arbeitszeiten.
+[Antwort 6] (1.061s) Gerne! Bis später!
+Gesamtlatenz: 9.941s
+
+==== [Test 2]=====
+[Antwort 1] (0.935s) Hallo Klaus, ich bin twi-bot, dein KI-Assistent von Cybob. Ich helfe dir gerne bei deinen Projekten und der Einarbeitung neuer Kollegen. Lass uns gemeinsam anfangen!
+[Antwort 2] (1.075s) Ich bin ein KI-Sprachmodell, das von Cybob entwickelt wurde, um Nutzern bei ihren Fragen zu helfen. Ich bin ein Werkzeug zur Unterstützung von Projektmanagement-Aufgaben, Onboarding neuer Kollegen und der Akquise von Kunden.  Ich kann dir mehr darüber erzählen, wenn du mir mehr Informationen gibst.
+[Antwort 3] (2.211s) Herzlichen Glückwunsch zum neuen Job! Die Arbeitszeiten für den ersten Montag sind 08:00 bis 17:00 Uhr und 10:00 bis 15:00 Uhr.  Die Kernarbeitszeit ist von 10:00 bis 17:00 Uhr.
+[Antwort 4] (2.010s) Das Flex-Time-System ermöglicht flexible Arbeitszeiten zwischen 07:00 und 10:00 Uhr, mit einer Entscheidung im Team nach 17:00 Uhr.  Es gibt eine Abstimmung, um die Arbeitszeiten zu koordinieren, und die Kernarbeitszeit wird um bis zu 2 Stunden variiert.
+[Antwort 5] (2.150s) Das ist kein Problem, denn Ihre Anreisezeit passt perfekt zu den Arbeitszeiten, die wir für Flexibilität planen.
+[Antwort 6] (1.031s) Gerne! Bis später!
+Gesamtlatenz: 9.412s
+
+==== [Test 3]=====
+[Antwort 1] (1.114s) Hallo Klaus, ich bin twi-bot, dein KI-Assistent von Cybob. Ich helfe dir gerne bei deinen Projekten und der Einarbeitung neuer Kollegen.  Um dir besser helfen zu können, benötige ich noch einige Informationen, um die Aufgabe optimal zu erfüllen.
+[Antwort 2] (1.086s) Ich bin ein KI-Sprachmodell, das von Cybob entwickelt wurde. Ich unterstütze Projektmanagement-Aufgaben, helfe bei der Onboarding-Prozesse und beantworte Fragen zu Akquise.  
+
+Ich bin ein Werkzeug, das dir bei der Erledigung deiner Aufgaben helfen kann.
+[Antwort 3] (2.282s) Herzlichen Glückwunsch zum ersten Arbeitstag! Die Arbeitszeiten für den ersten Montag sind 08:00 bis 17:00 Uhr, mit einer Kernarbeitszeit von 10:00 bis 17:00 Uhr.  Die Mittagspause ist flexibel zwischen 12:00 und 13:00 Uhr.
+[Antwort 4] (2.017s) Das Flex-Time-System ermöglicht flexible Arbeitszeiten zwischen 07:00 und 10:00 Uhr, mit einer Kernarbeitszeit von 17:00 Uhr bis 15:00 Uhr.  Es gibt eine Abstimmung im Team, um die Arbeitszeiten zu koordinieren und die Monatsarbeitszeit einzuhalten.
+[Antwort 5] (2.702s) Das ist kein Problem, denn die Arbeitszeiten sind flexibel zwischen 07:00 und 10:00 Uhr, mit einer Kernarbeitszeit von 17:00 Uhr bis 15:00 Uhr.  Ihre Anreise um 9:00 Uhr und Abreise um 16:00 Uhr passen perfekt dazu.
+[Antwort 6] (1.139s) Alles klar, danke für die Information! Bis später!
+Gesamtlatenz: 10.340s
+
+===========================
+=== Ergebnis ===
+[Frage 1] durschnittliche Latenz: 1.040
+[Frage 2] durschnittliche Latenz: 1.079
+[Frage 3] durschnittliche Latenz: 2.304
+[Frage 4] durschnittliche Latenz: 2.040
+[Frage 5] durschnittliche Latenz: 2.357
+[Frage 6] durschnittliche Latenz: 1.077
+durschnittliche Latez pro Durchlauf: 9.898 s
+durschnittliche Latenz pro Frage 1.650 s

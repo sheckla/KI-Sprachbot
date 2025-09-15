@@ -1,0 +1,64 @@
+# === Node / JavaScript ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.cache/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# === PHP ===
+vendor/
+composer.lock
+
+# Laravel / Symfony Cache & Logs
+/storage/
+bootstrap/cache/
+var/
+.env
+.env.local
+.env.*.local
+
+# TYPO3
+/fileadmin/_processed_/
+/typo3temp/
+/typo3conf/LocalConfiguration.php
+/typo3conf/PackageStates.php
+
+# WordPress
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+
+# === System files ===
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+
+# Logs
+*.log
+
+# === Other ===
+/.envrc
+/.idea/
+.DS_Store
+**.DS_Store
+**/wav2vec2_checkpoints/

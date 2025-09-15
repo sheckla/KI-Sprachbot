@@ -1,0 +1,50 @@
+Sprachbot Test mit Llama-3_2-3B-Instruct-IQ4_XS
+API: https://one.beezlebug.com/sprachbot/
+Output: bot-run-n3-Llama-3_2-3B-Instruct-IQ4_XS.txt
+Testdurchlauf Anzahl: 3
+Anzahl Fragen: 6
+Frage 1: Hallo, ich heiße Klaus!
+Frage 2: Für wen arbeitest du. Kannst du mir mehr darüber erzählen?
+Frage 3: Ich werde Morgen nächsten Montag meinen ersten Arbeitstag haben. Wann sind die Arbeitszeiten?
+Frage 4: Ok verstanden! Wie funktioniert das Flex-Time System?
+Frage 5: Wenn ich jetzt Montag um 9:00 Uhr kommen würde und dann um 16:00 Uhr gehe, ist das aber kein Problem, oder?
+Frage 6: Ok danke! Bis dann!
+=============================================
+
+==== [Test 1]=====
+[Antwort 1] (1.811s) Hallo Klaus, willkommen bei Cybob! Wir freuen uns, dich als neuer Kollege begrüßen.
+[Antwort 2] (1.184s) Ich bin ein KI-Sprachassistent von Cybob, hier, um dir bei Fragen und Aufgaben zu unterstützen.
+[Antwort 3] (4.949s) Die Arbeitszeiten betragen von 08:00 bis 17:00 Uhr, mit Kernarbeitszeiten von 10:00 bis 13:00 Uhr und 14:00 bis 17:00 Uhr.
+[Antwort 4] (3.938s) Das Flex-Time-System ermöglicht flexible Arbeitszeiten. Du kannst zwischen 07:00 und 10:00 Uhr beginnen und nach 17:00 Uhr (Mo-Do) oder 15:00 Uhr (Fr) enden.
+[Antwort 5] (5.098s) Ja, das ist möglich. Bitte stelle den Antrag im Team vor und erwarte eine Genehmigung.
+[Antwort 6] (2.427s) Guten Tag! Wir freuen uns auf deinen ersten Tag.
+Gesamtlatenz: 19.407s
+
+==== [Test 2]=====
+[Antwort 1] (0.918s) Hallo Klaus, willkommen bei Cybob! Wir freuen uns, dich als neuer Kollege begrüßen.
+[Antwort 2] (1.302s) Ich bin ein KI-Sprachassistent, Teil des Projektmanagements bei Cybob. Hier helfe ich mit Fragen, Onboarding und Akquise.
+[Antwort 3] (6.173s) Die Arbeitszeiten sind von Montag bis Donnerstag 08:00-17:00 Uhr, Freitag 08:00-15:00 Uhr. Bitte beachte die Kernarbeitszeit von 10:00-17:00 Uhr.
+[Antwort 4] (3.747s) Das Flex-Time-System ermöglicht flexible Arbeitszeiten. Du kannst deine Kernarbeitszeit um bis zu 2 Stunden verkürzen, aber eine Abstimmung im Team ist erforderlich.
+[Antwort 5] (5.508s) Nein, das Flex-Time-System ist nur für einen bestimmten Zeitraum gültig. Bitte beachte die festgelegten Kernarbeitszeiten.
+[Antwort 6] (2.519s) Guten Tag! Wir freuen uns auf deinen ersten Arbeitstag.
+Gesamtlatenz: 20.167s
+
+==== [Test 3]=====
+[Antwort 1] (0.722s) Hallo Klaus! Willkommen bei Cybob. Wie kann ich dir heute helfen?
+[Antwort 2] (1.255s) Ich bin ein KI-Sprachassistent von Cybob. Ich unterstütze Mitarbeiter bei verschiedenen Aufgaben, insbesondere bei Projektmanagement und Onboarding.
+[Antwort 3] (4.897s) Die Arbeitszeiten sind von 08:00 bis 17:00 Uhr. Die Kernarbeitszeit liegt von 10:00 bis 13:00 bzw. 14:00 Uhr.
+[Antwort 4] (3.872s) Das Flex-Time-System ermöglicht flexible Arbeitszeiten zwischen 07:00 und 10:00 Uhr und kann um zwei Stunden verkürzt werden. Eine Abstimmung im Team ist erforderlich.
+[Antwort 5] (5.426s) Ja, das ist kein Problem. Die Flex-Time-Regel besagt, dass du bis 17:00 Uhr arbeiten kannst.
+[Antwort 6] (2.763s) Gern geschehen! Wenn du noch Fragen hast, stehe ich gerne zur Verfügung. Bis zum nächsten Mal!
+Gesamtlatenz: 18.935s
+
+===========================
+=== Ergebnis ===
+[Frage 1] durschnittliche Latenz: 1.150
+[Frage 2] durschnittliche Latenz: 1.247
+[Frage 3] durschnittliche Latenz: 5.340
+[Frage 4] durschnittliche Latenz: 3.852
+[Frage 5] durschnittliche Latenz: 5.344
+[Frage 6] durschnittliche Latenz: 2.570
+durschnittliche Latez pro Durchlauf: 19.503 s
+durschnittliche Latenz pro Frage 3.251 s

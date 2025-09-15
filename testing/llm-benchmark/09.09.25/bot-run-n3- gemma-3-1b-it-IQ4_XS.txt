@@ -1,0 +1,50 @@
+Sprachbot Test mit  gemma-3-1b-it-IQ4_XS
+API: https://one.beezlebug.com/sprachbot/llm.php
+Output: bot-run-n3- gemma-3-1b-it-IQ4_XS.txt
+Testdurchlauf Anzahl: 3
+Anzahl Fragen: 6
+Frage 1: Hallo, ich heiße Klaus!
+Frage 2: Für wen arbeitest du. Kannst du mir mehr darüber erzählen?
+Frage 3: Ich werde Morgen nächsten Montag meinen ersten Arbeitstag haben. Wann sind die Arbeitszeiten?
+Frage 4: Ok verstanden! Wie funktioniert das Flex-Time System?
+Frage 5: Wenn ich jetzt Montag um 9:00 Uhr kommen würde und dann um 16:00 Uhr gehe, ist das aber kein Problem, oder?
+Frage 6: Ok danke! Bis dann!
+=============================================
+
+==== [Test 1]=====
+[Antwort 1] (0.903s) Hallo Klaus! Ich bin Twi-bot, dein KI-Sprachassistent von Cybob. Ich helfe dir gerne bei deinen Projekten und der Akquise.
+[Antwort 2] (0.813s) Ich bin ein KI-Sprachassistent, der Cybob unterstützt. Ich kann dir Informationen zu Projekten, Tickets und Prozessen geben, sowie bei der Akquise von E-Mails, Angeboten und Projekten helfen.
+[Antwort 3] (1.837s) Herzlichen Glückwunsch zum ersten Arbeitstag! Die Arbeitszeiten sind von 08:00 bis 17:00 Uhr, mit einer Kernarbeitszeit von 10:00 bis 17:00 Uhr.
+[Antwort 4] (1.438s) Es ist ganz einfach: Du kannst zwischen 07:00 und 10:00 Uhr arbeiten und dann um bis zu 2 Stunden verkürzen.  Es gibt aber auch eine Option, die um 2 Stunden länger zu arbeiten.
+[Antwort 5] (1.263s) Nein, das ist kein Problem! Du kommst um 16:00 Uhr, also ist das auch gut.
+[Antwort 6] (0.633s) Guten Tag! Bis später! 😊
+Gesamtlatenz: 6.887s
+
+==== [Test 2]=====
+[Antwort 1] (0.648s) Hallo Klaus! Ich bin Twi-bot, dein KI-Sprachassistent von Cybob. Ich helfe dir gerne bei deinen Projekten und der Akquise.
+[Antwort 2] (0.838s) Ich bin ein KI-Sprachassistent, der Cybob unterstützt. Ich kann dir Informationen zu Projekten, Tickets und Prozessen geben, sowie bei der Akquise von E-Mails, Angeboten und Projekten helfen.
+[Antwort 3] (1.841s) Herzlichen Glückwunsch zum ersten Arbeitstag! Die Arbeitszeiten sind von 08:00 bis 17:00 Uhr, mit einer Kernarbeitszeit von 10:00 bis 17:00 Uhr.
+[Antwort 4] (1.577s) Es ist ganz einfach: Du kannst zwischen 07:00 und 10:00 Uhr arbeiten und dann um bis zu 2 Stunden verkürzen.  Es gibt aber auch eine Option, die um 2 Stunden länger zu arbeiten.
+[Antwort 5] (1.243s) Nein, das ist kein Problem! Du kommst um 16:00 Uhr, also ist das auch gut.
+[Antwort 6] (0.615s) Guten Tag! Bis später! 😊
+Gesamtlatenz: 6.762s
+
+==== [Test 3]=====
+[Antwort 1] (0.661s) Hallo Klaus! Ich bin Twi-bot, dein KI-Sprachassistent von Cybob. Ich helfe dir gerne bei deinen Projekten und der Akquise.
+[Antwort 2] (0.821s) Ich bin ein KI-Sprachassistent, der Cybob unterstützt. Ich kann dir Informationen zu Projekten, Tickets und Prozessen geben, sowie bei der Akquise von E-Mails, Angeboten und Projekten helfen.
+[Antwort 3] (1.829s) Herzlichen Glückwunsch zum ersten Arbeitstag! Die Arbeitszeiten sind von 08:00 bis 17:00 Uhr, mit einer Kernarbeitszeit von 10:00 bis 17:00 Uhr.
+[Antwort 4] (1.449s) Es ist ganz einfach: Du kannst zwischen 07:00 und 10:00 Uhr arbeiten und dann um bis zu 2 Stunden verkürzen.  Es gibt aber auch eine Option, die um 2 Stunden länger zu arbeiten.
+[Antwort 5] (1.252s) Nein, das ist kein Problem! Du kommst um 16:00 Uhr, also ist das auch gut.
+[Antwort 6] (0.626s) Guten Tag! Bis später! 😊
+Gesamtlatenz: 6.638s
+
+===========================
+=== Ergebnis ===
+[Frage 1] durschnittliche Latenz: 0.737
+[Frage 2] durschnittliche Latenz: 0.824
+[Frage 3] durschnittliche Latenz: 1.836
+[Frage 4] durschnittliche Latenz: 1.488
+[Frage 5] durschnittliche Latenz: 1.253
+[Frage 6] durschnittliche Latenz: 0.625
+durschnittliche Latez pro Durchlauf: 6.762 s
+durschnittliche Latenz pro Frage 1.127 s

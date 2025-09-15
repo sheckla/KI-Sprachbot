@@ -1,0 +1,50 @@
+Sprachbot Test mit  gemma-3-4b-it-IQ4_XS
+API: https://one.beezlebug.com/sprachbot/llm.php
+Output: bot-run-n3- gemma-3-4b-it-IQ4_XS.txt
+Testdurchlauf Anzahl: 3
+Anzahl Fragen: 6
+Frage 1: Hallo, ich heiße Klaus!
+Frage 2: Für wen arbeitest du. Kannst du mir mehr darüber erzählen?
+Frage 3: Ich werde Morgen nächsten Montag meinen ersten Arbeitstag haben. Wann sind die Arbeitszeiten?
+Frage 4: Ok verstanden! Wie funktioniert das Flex-Time System?
+Frage 5: Wenn ich jetzt Montag um 9:00 Uhr kommen würde und dann um 16:00 Uhr gehe, ist das aber kein Problem, oder?
+Frage 6: Ok danke! Bis dann!
+=============================================
+
+==== [Test 1]=====
+[Antwort 1] (1.547s) Hallo, ich bin twi-bot, ein KI-Sprachassistent von Cybob. Meine Aufgabenbereiche sind Projektmanagement, Akquise und Onboarding.
+[Antwort 2] (0.997s) Ich arbeite für Cybob. Das Unternehmen ist ein Anbieter von Softwarelösungen für die Automobilindustrie.
+[Antwort 3] (5.795s) Im Unternehmen gilt: Die Bürozeiten sind von Montag bis Donnerstag 08:00 bis 17:00 Uhr und Freitag 08:00 bis 15:00 Uhr.
+[Antwort 4] (4.696s) Das Flex-Time-System ermöglicht einen flexiblen Arbeitsbeginn zwischen 07:00 und 10:00 Uhr. Ein verkürzter Arbeitstag ist möglich, der täglich um bis zu 2 Stunden reduziert werden kann. Anträge müssen über die Software „Projects“ eingereicht werden und werden von David oder Jens genehmigt.
+[Antwort 5] (4.201s) Im Unternehmen gilt: Ein verkürzter Arbeitstag ist möglich, der täglich um bis zu 2 Stunden reduziert werden kann. Bitte antraege dies über „Projects“ bei David oder Jens.
+[Antwort 6] (1.378s) Bitte sehr!
+Gesamtlatenz: 18.614s
+
+==== [Test 2]=====
+[Antwort 1] (1.219s) Hallo, ich bin twi-bot, ein KI-Sprachassistent von Cybob. Meine Aufgabenbereiche sind Projektmanagement, Akquise und Onboarding.
+[Antwort 2] (1.023s) Ich arbeite für Cybob. Das Unternehmen ist ein Anbieter von Softwarelösungen für die Automobilindustrie.
+[Antwort 3] (5.843s) Im Unternehmen gilt: Die Bürozeiten sind von Montag bis Donnerstag 08:00 bis 17:00 Uhr und Freitag 08:00 bis 15:00 Uhr.
+[Antwort 4] (4.855s) Das Flex-Time-System ermöglicht einen flexiblen Arbeitsbeginn zwischen 07:00 und 10:00 Uhr. Ein verkürzter Arbeitstag ist möglich, der täglich um bis zu 2 Stunden reduziert werden kann. Anträge müssen über die Software „Projects“ eingereicht werden und werden von David oder Jens genehmigt.
+[Antwort 5] (4.350s) Im Unternehmen gilt: Ein verkürzter Arbeitstag ist möglich, der täglich um bis zu 2 Stunden reduziert werden kann. Bitte antraege dies über „Projects“ bei David oder Jens.
+[Antwort 6] (1.428s) Bitte sehr!
+Gesamtlatenz: 18.718s
+
+==== [Test 3]=====
+[Antwort 1] (1.277s) Hallo, ich bin twi-bot, ein KI-Sprachassistent von Cybob. Meine Aufgabenbereiche sind Projektmanagement, Akquise und Onboarding.
+[Antwort 2] (1.068s) Ich arbeite für Cybob. Das Unternehmen ist ein Anbieter von Softwarelösungen für die Automobilindustrie.
+[Antwort 3] (6.089s) Im Unternehmen gilt: Die Bürozeiten sind von Montag bis Donnerstag 08:00 bis 17:00 Uhr und Freitag 08:00 bis 15:00 Uhr.
+[Antwort 4] (4.967s) Das Flex-Time-System ermöglicht einen flexiblen Arbeitsbeginn zwischen 07:00 und 10:00 Uhr. Ein verkürzter Arbeitstag ist möglich, der täglich um bis zu 2 Stunden reduziert werden kann. Anträge müssen über die Software „Projects“ eingereicht werden und werden von David oder Jens genehmigt.
+[Antwort 5] (4.432s) Im Unternehmen gilt: Ein verkürzter Arbeitstag ist möglich, der täglich um bis zu 2 Stunden reduziert werden kann. Bitte antraege dies über „Projects“ bei David oder Jens.
+[Antwort 6] (1.458s) Bitte sehr!
+Gesamtlatenz: 19.291s
+
+===========================
+=== Ergebnis ===
+[Frage 1] durschnittliche Latenz: 1.348
+[Frage 2] durschnittliche Latenz: 1.029
+[Frage 3] durschnittliche Latenz: 5.909
+[Frage 4] durschnittliche Latenz: 4.839
+[Frage 5] durschnittliche Latenz: 4.328
+[Frage 6] durschnittliche Latenz: 1.421
+durschnittliche Latez pro Durchlauf: 18.874 s
+durschnittliche Latenz pro Frage 3.146 s

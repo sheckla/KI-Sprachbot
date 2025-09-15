@@ -1,0 +1,50 @@
+Sprachbot Test mit gemma-3-4b-it-IQ4_XS
+API: https://one.beezlebug.com/sprachbot/llm.php
+Output: bot-run-n3-gemma-3-4b-it-IQ4_XS.txt
+Testdurchlauf Anzahl: 3
+Anzahl Fragen: 6
+Frage 1: Hallo, ich heiße Klaus!
+Frage 2: Für wen arbeitest du. Kannst du mir mehr darüber erzählen?
+Frage 3: Ich werde Morgen nächsten Montag meinen ersten Arbeitstag haben. Wann sind die Arbeitszeiten?
+Frage 4: Ok verstanden! Wie funktioniert das Flex-Time System?
+Frage 5: Wenn ich jetzt Montag um 9:00 Uhr kommen würde und dann um 16:00 Uhr gehe, ist das aber kein Problem, oder?
+Frage 6: Ok danke! Bis dann!
+=============================================
+
+==== [Test 1]=====
+[Antwort 1] (1.683s) Hallo Klaus, Cybob ist ein Technologieunternehmen, das sich auf innovative Lösungen für die Automobilindustrie spezialisiert hat. Wir freuen uns, Sie im Team begrüßen zu dürfen.
+[Antwort 2] (1.483s) Cybob beschäftigt derzeit über 250 Mitarbeiter in verschiedenen Teams. Weitere Informationen über die Unternehmensstruktur und die jeweiligen Abteilungen finden Sie im Intranet.
+[Antwort 3] (7.559s) Die Bürozeiten sind von Montag bis Donnerstag von 08:00 bis 17:00 Uhr und Freitag von 08:00 bis 15:00 Uhr. Bitte beachten Sie die Kernarbeitszeiten von 10:00 bis 17:00 Uhr (Mo-Do) und 10:00 bis 15:00 Uhr (Fr).
+[Antwort 4] (5.372s) Das Flex-Time-System ermöglicht es, die Arbeitszeit innerhalb bestimmter Grenzen zu verändern. Eine detaillierte Beschreibung und die benötigten Antragsformalitäten finden Sie im Intranet unter „Flexible Arbeitszeiten“.
+[Antwort 5] (7.751s) Ja, eine solche Freieinschränkung ist grundsätzlich möglich, jedoch ist eine vorherige Abstimmung mit Ihrem Team erforderlich. Bitte reichen Sie Ihren Antrag über „Projects“ bei David oder Jens ein.
+[Antwort 6] (3.605s) Gerne geschehen! Wir wünschen Ihnen einen guten Start bei Cybob und einen erfolgreichen ersten Tag.
+Gesamtlatenz: 27.453s
+
+==== [Test 2]=====
+[Antwort 1] (1.157s) Hallo Klaus, Cybob ist ein Technologieunternehmen, das sich auf innovative Lösungen für die Industrie konzentriert. Wir freuen uns, Sie im Team zu haben!
+[Antwort 2] (1.414s) Cybob beschäftigt derzeit über 200 Mitarbeiter. Informationen über die genaue Struktur und Abteilungen sind im Onboarding-Prozess verfügbar.
+[Antwort 3] (7.493s) Die Bürozeiten sind von Montag bis Donnerstag von 08:00 bis 17:00 Uhr und Freitag von 08:00 bis 15:00 Uhr. Die Kernarbeitszeiten liegen zwischen 10:00 und 17:00 Uhr (Mo-Do) und 10:00 und 15:00 Uhr (Fr).
+[Antwort 4] (5.322s) Das Flex-Time-System ermöglicht es, die Arbeitszeit innerhalb der Kernarbeitszeiten zu verschieben. Ein Antrag muss im Team abgestimmt und von David oder Jens genehmigt werden.
+[Antwort 5] (7.957s) Das ist grundsätzlich möglich, jedoch muss dies im Team abgesprochen werden. Bitte reichen Sie den Antrag über “Projects” ein, um eine Genehmigung von David oder Jens zu erhalten.
+[Antwort 6] (3.563s) Gerne geschehen, Klaus! Wir freuen uns auf Ihre Mitarbeit bei Cybob.
+Gesamtlatenz: 26.906s
+
+==== [Test 3]=====
+[Antwort 1] (1.104s) Hallo Klaus, willkommen im Team von Cybob. Die Firma Cybob ist ein Technologieunternehmen, das sich auf innovative Lösungen für die Industrie konzentriert.
+[Antwort 2] (1.511s) Cybob beschäftigt derzeit über 200 Mitarbeiter in verschiedenen Abteilungen. Informationen über die spezifischen Teams und Verantwortlichkeiten sind im Onboarding-Prozess verfügbar.
+[Antwort 3] (7.852s) Die Bürozeiten sind von Montag bis Donnerstag von 08:00 bis 17:00 Uhr und Freitag von 08:00 bis 15:00 Uhr. Bitte beachten Sie die Kernarbeitszeiten von 10:00 bis 17:00 Uhr (Mo-Do) und 10:00 bis 15:00 Uhr (Fr).
+[Antwort 4] (5.740s) Das Flex-Time-System ermöglicht es, die Arbeitszeit innerhalb bestimmter Grenzen zu variieren. Bitte reichen Sie Anträge für eine Flexibilität von bis zu zwei Stunden über das Projekt-Tool ein, um eine Teamabstimmung sicherzustellen.
+[Antwort 5] (7.932s) Das ist grundsätzlich möglich, aber bitte stimmen Sie dies vorher mit Ihrem Team ab. Die Flexibilität muss innerhalb der vorgegebenen Kernarbeitszeiten liegen.
+[Antwort 6] (3.629s) Gerne geschehen! Wir freuen uns auf Ihre Mitarbeit bei Cybob.
+Gesamtlatenz: 27.768s
+
+===========================
+=== Ergebnis ===
+[Frage 1] durschnittliche Latenz: 1.315
+[Frage 2] durschnittliche Latenz: 1.469
+[Frage 3] durschnittliche Latenz: 7.635
+[Frage 4] durschnittliche Latenz: 5.478
+[Frage 5] durschnittliche Latenz: 7.880
+[Frage 6] durschnittliche Latenz: 3.599
+durschnittliche Latez pro Durchlauf: 27.376 s
+durschnittliche Latenz pro Frage 4.563 s
