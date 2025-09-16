@@ -23,17 +23,55 @@ async function recordAudio() {
       audio: { echoCancellation: true, noiseSuppression: false }, video: false
     });
 
+    // === AudioContext für Lautstärke-Messung ===
+    audioContext = new AudioContext();
+    analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(recorderStream);
+    source.connect(analyser);
+
+    analyser.fftSize = 2048;
+    dataArray = new Uint8Array(analyser.fftSize);
+
+    function updateVolume() {
+      analyser.getByteTimeDomainData(dataArray);
+
+      // RMS berechnen
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        let val = (dataArray[i] - 128) / 128;
+        sum += val * val;
+      }
+      let rms = Math.sqrt(sum / dataArray.length);
+      let db = 20 * Math.log10(rms);
+
+      const info = document.getElementById("ptt-info");
+      if (rms < 0.01) {
+        info.textContent = `Silent (${db.toFixed(1)} dB)`;
+      } else {
+        info.textContent = `Lautstärke: ${db.toFixed(1)} dB`;
+      }
+
+      volumeAnimId = requestAnimationFrame(updateVolume);
+    }
+    updateVolume();
+
     // mediarecorder init
     let supportedMime = findSupportedMime();
     recorder = new MediaRecorder(recorderStream, { mimeType: supportedMime });
     recorderChunks = [];
 
     // push recording chunks
-    recorder.ondataavailable = function (e) {
+    recorder.addEventListener("dataavailable", e => {
       if (e.data && e.data.size) {
         recorderChunks.push(e.data);
       }
     }
+    )
+    // recorder.ondataavailable = function (e) {
+    // if (e.data && e.data.size) {
+    // recorderChunks.push(e.data);
+    // }
+    // }
 
     // recorder stop listener
     recorder.onstop = function () {
@@ -61,6 +99,9 @@ async function recordAudio() {
       recorderStream = null;
       pttButton.textContent = 'Push-to-talk';
       micIsRecording = false;
+      cancelAnimationFrame(volumeAnimId);
+if (audioContext) audioContext.close();
+document.getElementById("ptt-info").textContent = "(Mic Idle)";
     };
 
     // Start Recording
@@ -73,6 +114,8 @@ async function recordAudio() {
     recorderStream = null;
     micIsRecording = false;
     pttButton.textContent = "Push-to-Talk";
+    if (audioContext) audioContext.close();
+document.getElementById("ptt-info").textContent = "(Mic Idle)";
   }
 }
 

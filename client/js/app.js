@@ -1,139 +1,165 @@
-// ===== Config =====
-
 // ===== Basic Variables =====
 const beezlebugApi = new BeezlebugAPI(API_URL);
-const canvas = document.getElementById("visualizer");
-const canvasCtx = canvas?.getContext("2d");
+// const canvas = document.getElementById("visualizer");
+// const canvasCtx = canvas?.getContext("2d");
 const fileInput = document.getElementById("file");
 const fileInputPlayer = document.getElementById("inputPlayer");
 const pttButton = document.getElementById('push-to-talk-begin')
 const loadingText = document.getElementById("loading");
+let onnxSession;
 let selectedTypeTTS = "coqui";
-let timer = 0;
 let llmAnswer = "";
-let animationFrameId = null;
-let pttStartTime = 0;
-    // Hilfsfunktion: Hann-Fenster
-    function hannWindow(length) {
-      const win = new Float32Array(length);
-      for (let i = 0; i < length; i++) {
-        win[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (length - 1)));
-      }
-      return win;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const model = "./models/hey_rhasspy_v0.1.onnx";
+  await loadModel(model);
+  document.getElementById("start").disabled = false;
+  document.getElementById("start-file").disabled = false;
+});
+
+async function loadModel(name) {
+  console.log("loading Onxx-model " + name);
+  onnxSession = await ort.InferenceSession.create(name);
+  console.log("model loaded!");
+}
+
+async function initWakeWordFromFile() {
+  const file = document.getElementById("file").files?.[0];
+  if (!file) {
+    alert("Bitte zuerst eine Audiodatei auswählen!");
+    return;
+  }
+
+  const inputName = onnxSession.inputNames[0];
+  const outputName = onnxSession.outputNames[0];
+  document.getElementById("status").innerText = "Modell geladen ✅";
+
+  // Audio-Datei laden und decodieren
+  const audioCtx = new AudioContext();
+  const arrayBuffer = await file.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+  // Rohsamples vom 1. Kanal
+  let samples = audioBuffer.getChannelData(0);
+
+  // Falls nötig: Downsampling auf 16kHz
+  const factor = audioCtx.sampleRate / 16000;
+  if (factor !== 1) {
+    const down = new Float32Array(Math.floor(samples.length / factor));
+    for (let i = 0, j = 0; i < samples.length; i += factor, j++) {
+      down[j] = samples[Math.floor(i)];
     }
+    samples = down;
+  }
 
-    // Hilfsfunktion: FFT -> Magnitude Spectrum
-    function fftMag(frame) {
-      const N = frame.length;
-      const re = new Float32Array(N);
-      const im = new Float32Array(N);
-      frame.forEach((val, i) => re[i] = val);
+  const frameSize = 512;
+  const window = hannWindow(frameSize);
+  const fbanks = melFilterbank(frameSize, 16000, 96);
+  let frameBuffer = [];
 
-      // Cooley–Tukey FFT (nur für Test, kann durch Lib ersetzt werden)
-      let step = 1;
-      for (let size = 2; size <= N; size *= 2) {
-        const half = size / 2;
-        const tableStep = N / size;
-        for (let i = 0; i < N; i += size) {
-          for (let j = 0; j < half; j++) {
-            const l = i + j;
-            const r = i + j + half;
-            const angle = (2 * Math.PI * j) / size;
-            const cos = Math.cos(angle);
-            const sin = -Math.sin(angle);
-            const tre = re[r] * cos - im[r] * sin;
-            const tim = re[r] * sin + im[r] * cos;
-            re[r] = re[l] - tre;
-            im[r] = im[l] - tim;
-            re[l] += tre;
-            im[l] += tim;
-          }
-        }
-        step *= 2;
+  // Datei frameweise durchlaufen
+  for (let pos = 0; pos + frameSize <= samples.length; pos += frameSize) {
+    const frame = samples.slice(pos, pos + frameSize);
+
+    // Fensterung + FFT
+    const framed = frame.map((v, i) => v * window[i]);
+    const magSpec = fftMag(framed);
+
+    // Mel-Spectrum (96 Bins)
+    const melSpec = fbanks.map(f => f.reduce((acc, w, i) => acc + w * magSpec[i], 0));
+    const logMel = melSpec.map(v => Math.log(v + 1e-6));
+
+    frameBuffer.push(logMel);
+    if (frameBuffer.length > 16) frameBuffer.shift();
+
+    if (frameBuffer.length === 16) {
+      const flat = frameBuffer.flat();
+      const tensor = new ort.Tensor("float32", Float32Array.from(flat), [1, 16, 96]);
+      const results = await onnxSession.run({ [inputName]: tensor });
+      const score = results[outputName].data[0];
+
+      console.log(`Frame @${(pos / 16000).toFixed(2)}s: Score=${score.toFixed(3)}`);
+      document.getElementById("score").innerText = "Score: " + score.toFixed(3);
+
+      if (score > 0.7) {
+        document.getElementById("status").innerText = "Wakeword erkannt! " + score.toFixed(3);
+        break; // stoppe nach Erkennung
       }
-      const mags = new Float32Array(N / 2);
-      for (let i = 0; i < N / 2; i++) {
-        mags[i] = Math.sqrt(re[i] ** 2 + im[i] ** 2);
-      }
-      return mags;
     }
+  }
+}
+// Hilfsfunktion: Hann-Fenster
+function hannWindow(length) {
+  const win = new Float32Array(length);
+  for (let i = 0; i < length; i++) {
+    win[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (length - 1)));
+  }
+  return win;
+}
 
-    // Mel-Filterbank bauen
-    function melFilterbank(nfft, sampleRate, numMels) {
-      function hzToMel(hz) { return 2595 * Math.log10(1 + hz / 700); }
-      function melToHz(mel) { return 700 * (Math.pow(10, mel / 2595) - 1); }
+// Hilfsfunktion: FFT -> Magnitude Spectrum
+function fftMag(frame) {
+  const N = frame.length;
+  const re = new Float32Array(N);
+  const im = new Float32Array(N);
+  frame.forEach((val, i) => re[i] = val);
 
-      const lowMel = hzToMel(0);
-      const highMel = hzToMel(sampleRate / 2);
-      const mels = new Float32Array(numMels + 2);
-      for (let i = 0; i < numMels + 2; i++) {
-        mels[i] = lowMel + (i * (highMel - lowMel)) / (numMels + 1);
+  // Cooley–Tukey FFT (nur für Test, kann durch Lib ersetzt werden)
+  let step = 1;
+  for (let size = 2; size <= N; size *= 2) {
+    const half = size / 2;
+    const tableStep = N / size;
+    for (let i = 0; i < N; i += size) {
+      for (let j = 0; j < half; j++) {
+        const l = i + j;
+        const r = i + j + half;
+        const angle = (2 * Math.PI * j) / size;
+        const cos = Math.cos(angle);
+        const sin = -Math.sin(angle);
+        const tre = re[r] * cos - im[r] * sin;
+        const tim = re[r] * sin + im[r] * cos;
+        re[r] = re[l] - tre;
+        im[r] = im[l] - tim;
+        re[l] += tre;
+        im[l] += tim;
       }
-      const hz = Array.from(mels).map(melToHz);
-      const bins = hz.map(f => Math.floor((nfft + 1) * f / sampleRate));
-
-      const fb = [];
-      for (let i = 0; i < numMels; i++) {
-        const f = new Float32Array(nfft / 2);
-        for (let j = bins[i]; j < bins[i + 1]; j++) {
-          f[j] = (j - bins[i]) / (bins[i + 1] - bins[i]);
-        }
-        for (let j = bins[i + 1]; j < bins[i + 2]; j++) {
-          f[j] = (bins[i + 2] - j) / (bins[i + 2] - bins[i + 1]);
-        }
-        fb.push(f);
-      }
-      return fb;
     }
+    step *= 2;
+  }
+  const mags = new Float32Array(N / 2);
+  for (let i = 0; i < N / 2; i++) {
+    mags[i] = Math.sqrt(re[i] ** 2 + im[i] ** 2);
+  }
+  return mags;
+}
 
-    async function initWakeWord() {
-      const session = await ort.InferenceSession.create("./models/hey_rhasspy_v0.1.onnx");
-      const inputName = session.inputNames[0];
-      const outputName = session.outputNames[0];
-      document.getElementById("status").innerText = "Modell geladen ✅";
+// Mel-Filterbank bauen
+function melFilterbank(nfft, sampleRate, numMels) {
+  function hzToMel(hz) { return 2595 * Math.log10(1 + hz / 700); }
+  function melToHz(mel) { return 700 * (Math.pow(10, mel / 2595) - 1); }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-const audioCtx = new AudioContext();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(512, 1, 1);
-      source.connect(processor);
-      processor.connect(audioCtx.destination);
+  const lowMel = hzToMel(0);
+  const highMel = hzToMel(sampleRate / 2);
+  const mels = new Float32Array(numMels + 2);
+  for (let i = 0; i < numMels + 2; i++) {
+    mels[i] = lowMel + (i * (highMel - lowMel)) / (numMels + 1);
+  }
+  const hz = Array.from(mels).map(melToHz);
+  const bins = hz.map(f => Math.floor((nfft + 1) * f / sampleRate));
 
-      const frameSize = 512;
-      const window = hannWindow(frameSize);
-      const fbanks = melFilterbank(frameSize, 16000, 96);
-      let frameBuffer = [];
-
-      processor.onaudioprocess = async (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-
-        // Fensterung + FFT
-        const framed = input.map((v, i) => v * window[i % frameSize]);
-        const magSpec = fftMag(framed);
-
-        // Mel-Spectrum (96 Bins)
-        const melSpec = fbanks.map(f => f.reduce((acc, w, i) => acc + w * magSpec[i], 0));
-        const logMel = melSpec.map(v => Math.log(v + 1e-6));
-
-        frameBuffer.push(logMel);
-        if (frameBuffer.length > 16) frameBuffer.shift();
-
-        if (frameBuffer.length === 16) {
-          const flat = frameBuffer.flat();
-          const tensor = new ort.Tensor("float32", Float32Array.from(flat), [1, 16, 96]);
-          const results = await session.run({ [inputName]: tensor });
-          const score = results[outputName].data[0];
-          console.log("Wakeword-Score:", score.toFixed(3));
-          if (score > 0.7) {
-            document.getElementById("status").innerText = "Wakeword erkannt!" + score.toFixed(3);
-          } else {
-            document.getElementById("status").innerText = "Warte auf Wakeword..." + score.toFixed(3);
-          }
-        }
-      };
+  const fb = [];
+  for (let i = 0; i < numMels; i++) {
+    const f = new Float32Array(nfft / 2);
+    for (let j = bins[i]; j < bins[i + 1]; j++) {
+      f[j] = (j - bins[i]) / (bins[i + 1] - bins[i]);
     }
-
-    document.getElementById("start").onclick = initWakeWord;
+    for (let j = bins[i + 1]; j < bins[i + 2]; j++) {
+      f[j] = (bins[i + 2] - j) / (bins[i + 2] - bins[i + 1]);
+    }
+    fb.push(f);
+  }
+  return fb;
+}
 
 /*****************************
  *  Speech-To-Text Step

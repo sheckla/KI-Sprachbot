@@ -38,14 +38,18 @@ button:hover {
     background-color: var(--color-button-dark);
 }
 
+button:disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
 input {
-    padding: 8px 0px;
+    padding: 8px 8px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    width: 100%;
+    width: -moz-available;
     margin-top: 8px;
     margin-bottom: 8px;
-    display: block
 }
 
 select {
@@ -98,6 +102,13 @@ td:first-child, th:first-child {
 
 td:last-child, th:last-child {
   width: 75%;
+}
+
+.logo {
+    max-width: 120px;
+    margin: 0 auto;
+    display: block;
+    margin-bottom: 12px;
 }
 
 .divider {

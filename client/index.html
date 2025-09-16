@@ -1,7 +1,6 @@
 <!doctype html>
 
 <head>
-
   <html lang="de">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -16,17 +15,16 @@
 </head>
 
 <body>
-
   <title>Twi-Bot KI-Pipeline Test</title>
-  <button id="start">Start Listening</button>
-  <div id="status">Idle</div>
   <div class="container">
     <div>
       <img src="logo.png" alt="twi-bot logo" class="logo">
     </div>
+
+    <!-- === Introduction === -->
     <div class="section">
       <p>Dies ist ein Test-Client für die KI-Pipeline bestehend aus STT, LLM und TTS.</p>
-      <p>Die API ist unter "https://one.beezlebug.com/sprachbot"</p>
+      <p>Die API ist unter "https://one.beezlebug.com/ki-sprachbot"</p>
       <h4> Hinweise zur Nutzung</h4>
       <p>
         1. Audio eingeben: entweder per Push-to-Talk oder Audiodatei<br>
@@ -35,10 +33,8 @@
         4. TTS: Antwort des LLM in Audio umwandeln<br>
       </p>
     </div>
-
     <div class="divider"></div>
-
-
+    <!-- === Dashboard === -->
     <div class="section">
       <!-- Audioeingabe -->
       <h2>Dashboard</h2>
@@ -49,6 +45,12 @@
         <tr>
           <td>
             <button id="push-to-talk-begin" onclick="recordAudio()">Push-to-talk</button>
+            <div id="ptt-info"></div>
+            <button id="start" onclick="initWakeWord()" disabled>Start Listening</button>
+            <button id="start-file" onclick="initWakeWordFromFile()" disabled>Audio einspielen!</button>
+            <input type="range" id="wakeword-threshold" min="0" max="1" step="0.01" value="0.5">
+            <div id="status">Idle</div>
+            <div id="score"></div>
           </td>
           <td>
             <input id="file" class="input-file" type="file" accept="audio/*" style="width:100%" />
@@ -56,7 +58,7 @@
           </td>
         </tr>
       </table>
-      <!-- Dashboard -->
+      <!-- Pipeline -->
       <table>
         <tr>
         </tr>
@@ -186,9 +188,10 @@
   </div>
   <pre id="log" style="white-space:pre-wrap;font:12px/1.4 monospace;"></pre>
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/meyda/dist/web/meyda.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/meyda/dist/web/meyda.min.js"></script> -->
   <script src="./js/beezlebugAPI.js"></script>
   <script src="./js/recorder.js"></script>
   <script src="./js/app.js"></script>
 </body>
+
 </html>
