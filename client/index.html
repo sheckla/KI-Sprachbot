@@ -34,6 +34,7 @@
       </p>
     </div>
     <div class="divider"></div>
+
     <!-- === Dashboard === -->
     <div class="section">
       <!-- Audioeingabe -->
@@ -44,6 +45,7 @@
         </tr>
         <tr>
           <td>
+            <!-- Push-To-Talk & WakeWord -->
             <button id="push-to-talk-begin" onclick="recordAudio()">Push-to-talk</button>
             <div id="ptt-info"></div>
             <button id="start" onclick="initWakeWord()" disabled>Start Listening</button>
@@ -53,6 +55,7 @@
             <div id="score"></div>
           </td>
           <td>
+            <!-- File Input -->
             <input id="file" class="input-file" type="file" accept="audio/*" style="width:100%" />
             <audio id="inputPlayer" controls></audio>
           </td>
@@ -64,16 +67,16 @@
         </tr>
         <tr>
           <td>
+            <!-- Pipeline Controls & (conversation clear) -->
             <button id="pipeline-start" onclick="startPipeline()">→ Pipeline starten</button>
             <button id="clear" class="delete-button" onclick="clearAll()">Alles löschen</button><br>
             <button id="reset" class="delete-button" onclick="clearConversation()">Clear Conversation</button>
             Conversation: <a id="conversation"> none</a><br>
           </td>
           <td>
+            <!-- Pipeline Output -->
             <div id="final-success" class="answer">
               <a id="loading"></a><br><br>
-              <!-- <p id ="final-transcription"></p> -->
-              <!-- <p id ="final-answer"></p> -->
               <a id="total-ms-server"></a><br>
               <a id="total-ms-network"></a><br>
               <a id="total-ms-total"></a>
@@ -83,7 +86,8 @@
       </table>
     </div>
     <div class="divider"></div>
-    <!-- STT -->
+
+    <!-- === 1. STT === -->
     <div class="section">
       <table>
         <tr>
@@ -113,8 +117,7 @@
         </tr>
       </table>
 
-      <!-- LLM -->
-
+      <!-- === 2. LLM === -->
       <table>
         <tr>
           <th colspan="2">
@@ -139,8 +142,7 @@
           </td>
         </tr>
 
-        <!-- TTS -->
-
+        <!-- === 3. TTS === -->
         <table>
           <tr>
             <th colspan="2">
@@ -186,12 +188,10 @@
         </table>
     </div>
   </div>
-  <pre id="log" style="white-space:pre-wrap;font:12px/1.4 monospace;"></pre>
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
-  <!-- <script src="https://cdn.jsdelivr.net/npm/meyda/dist/web/meyda.min.js"></script> -->
   <script src="./js/beezlebugAPI.js"></script>
+  <script src="./js/MediaRecorder.js"></script>
   <script src="./js/recorder.js"></script>
   <script src="./js/app.js"></script>
 </body>
-
 </html>

@@ -1,16 +1,15 @@
 // ===== Basic Variables =====
 const beezlebugApi = new BeezlebugAPI(API_URL);
-// const canvas = document.getElementById("visualizer");
-// const canvasCtx = canvas?.getContext("2d");
 const fileInput = document.getElementById("file");
 const fileInputPlayer = document.getElementById("inputPlayer");
-const pttButton = document.getElementById('push-to-talk-begin')
 const loadingText = document.getElementById("loading");
 let onnxSession;
 let selectedTypeTTS = "coqui";
 let llmAnswer = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("start").disabled = true;
+  document.getElementById("start-file").disabled = true;
   const model = "./models/hey_rhasspy_v0.1.onnx";
   await loadModel(model);
   document.getElementById("start").disabled = false;
@@ -20,8 +19,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadModel(name) {
   console.log("loading Onxx-model " + name);
   onnxSession = await ort.InferenceSession.create(name);
+  onnxSession.startProfiling();
   console.log("model loaded!");
 }
+
+async function resampleTo16k(audioBuffer) {
+  const targetRate = 16000;
+  const offlineCtx = new OfflineAudioContext(
+    1, // Kanäle: mono
+    Math.ceil(audioBuffer.duration * targetRate),
+    targetRate
+  );
+
+  // Quelle aus dem alten Buffer
+  const source = offlineCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(offlineCtx.destination);
+  source.start(0);
+
+  // Rendern → neues AudioBuffer mit 16 kHz mono
+  const rendered = await offlineCtx.startRendering();
+  return rendered.getChannelData(0); // Float32Array
+}
+
 
 async function initWakeWordFromFile() {
   const file = document.getElementById("file").files?.[0];
@@ -41,17 +61,10 @@ async function initWakeWordFromFile() {
 
   // Rohsamples vom 1. Kanal
   let samples = audioBuffer.getChannelData(0);
-
-  // Falls nötig: Downsampling auf 16kHz
-  const factor = audioCtx.sampleRate / 16000;
-  if (factor !== 1) {
-    const down = new Float32Array(Math.floor(samples.length / factor));
-    for (let i = 0, j = 0; i < samples.length; i += factor, j++) {
-      down[j] = samples[Math.floor(i)];
-    }
-    samples = down;
-  }
-
+  // evtl downsampling?
+  // klappt nicht gut mit 44khz
+  // 22khz, 16khz sind ok!
+  samples = await resampleTo16k(audioBuffer);
   const frameSize = 512;
   const window = hannWindow(frameSize);
   const fbanks = melFilterbank(frameSize, 16000, 96);
@@ -481,6 +494,10 @@ fileInput.addEventListener("change", () => {
   fileInputPlayer.load();
 });
 
+/*****************************
+ *  TTS Type Listener
+ * - show advanced Options for Piper
+ *****************************/
 document.getElementById("tts-type").addEventListener("change", () => {
   selectedTypeTTS = document.getElementById("tts-type").value;
   if (selectedTypeTTS === "coqui") {
