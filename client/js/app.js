@@ -19,15 +19,20 @@ function wakeWordDetected() {
   document.getElementById("push-to-talk-begin").focus();
 }
 
+/*************************************************************
+ *  Init Application
+ *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
   updateWakeWordThresholdDisplay();
   updateAudioInputLabel();
   updateTTSOptions();
+  updateModelSelection(document.getElementById("wake-word-model").value);
 
   document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
-  const model = "./models/hey_rhasspy_v0.1.onnx";
-  await wakewordController.loadWakeWordModel(model);
+  // await wakewordController.loadWakeWordModel(model);
+  await wakewordController.loadProcessingModels();
+  console.log("WakeWordController ready");
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
 });
@@ -37,16 +42,21 @@ document.addEventListener("DOMContentLoaded", async () => {
  * - Handles file input and runs WakeWord detection
  *****************************/
 async function initWakeWordFromFile() {
-  // let threshold = document.getElementById("wakeword-threshold").value;
-  // let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
-  // if (result.hit) {
-  //   document.getElementById("status").innerText = "Wakeword erkannt! Score: " + result.score.toFixed(3);
-  //   wakeWordDetected();
-  // } else {
-  //   let maxScore = Math.max(...result.scores);
-  //   document.getElementById("status").innerText = "Wakeword nicht erkannt! Max Score: " + maxScore.toFixed(3);
-  //   return;
-  // }
+  let threshold = parseFloat(document.getElementById("wakeword-threshold").value) || 0.5;
+  let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
+  console.log(result);
+  if (result.scores.length === 0) {
+    console.log("no scores bruh");
+    return;
+  }
+if (result.hit) {
+  let maxScore = Math.max(...result.scores);
+  document.getElementById("status").innerText = `Wakeword erkannt! Max-Score: ${maxScore.toFixed(5)}`;
+} else {
+  let maxScore = Math.max(...result.scores);
+  document.getElementById("status").innerText = `Kein Wakeword erkannt. Max-Score: ${maxScore.toFixed(5)}`;
+}
+
 
 }
 
