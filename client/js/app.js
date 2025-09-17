@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
   const model = "./models/hey_rhasspy_v0.1.onnx";
-  await wakewordController.loadModel(model);
+  await wakewordController.loadWakeWordModel(model);
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
 });
@@ -37,16 +37,16 @@ document.addEventListener("DOMContentLoaded", async () => {
  * - Handles file input and runs WakeWord detection
  *****************************/
 async function initWakeWordFromFile() {
-  let threshold = document.getElementById("wakeword-threshold").value;
-  let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
-  if (result.hit) {
-    document.getElementById("status").innerText = "Wakeword erkannt! Score: " + result.score.toFixed(3);
-    wakeWordDetected();
-  } else {
-    let maxScore = Math.max(...result.scores);
-    document.getElementById("status").innerText = "Wakeword nicht erkannt! Max Score: " + maxScore.toFixed(3);
-    return;
-  }
+  // let threshold = document.getElementById("wakeword-threshold").value;
+  // let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
+  // if (result.hit) {
+  //   document.getElementById("status").innerText = "Wakeword erkannt! Score: " + result.score.toFixed(3);
+  //   wakeWordDetected();
+  // } else {
+  //   let maxScore = Math.max(...result.scores);
+  //   document.getElementById("status").innerText = "Wakeword nicht erkannt! Max Score: " + maxScore.toFixed(3);
+  //   return;
+  // }
 
 }
 
@@ -394,5 +394,5 @@ function updateWakeWordThresholdDisplay() {
 }
 
 function updateModelSelection(name) {
-  wakewordController.loadModel(name);
+  wakewordController.loadWakeWordModel(name);
 }

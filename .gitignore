@@ -62,3 +62,4 @@ Thumbs.db
 .DS_Store
 **.DS_Store
 **/wav2vec2_checkpoints/
+**/.venv

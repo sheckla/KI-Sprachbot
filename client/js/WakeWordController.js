@@ -1,7 +1,11 @@
 class WakeWordController {
     onnxSession = null;
 
-    async loadModel(name = "./models/hey_rhasspy_v0.1.onnx") {
+
+    constructor() {
+    }
+
+    async loadWakeWordModel(name = "./models/hey_rhasspy_v0.1.onnx") {
         if (this.onnxSession) {
             this.onxxSession = null;
         }
@@ -28,7 +32,7 @@ class WakeWordController {
         // evtl downsampling?
         // klappt nicht gut mit 44khz
         // 22khz, 16khz sind ok!
-        samples = await resampleTo16k(audioBuffer);
+        // samples = await resampleTo16k(audioBuffer);
         const frameSize = 512;
         const window = hannWindow(frameSize);
         const fbanks = melFilterbank(frameSize, 16000, 96);
@@ -36,7 +40,7 @@ class WakeWordController {
 
         // Datei frameweise durchlaufen
         let scores = []
-        for (let pos = 0; pos + frameSize <= samples.length; pos += frameSize/2) {
+        for (let pos = 0; pos + frameSize <= samples.length; pos += frameSize) {
             const frame = samples.slice(pos, pos + frameSize);
 
             // Fensterung + FFT
