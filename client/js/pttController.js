@@ -1,25 +1,31 @@
-let userMediaRecorderStream = null;
-let userMediaRecorder = null;
-let userMediaRecorderChunks = [];
-let micIsRecording = false;
-const pttButton = document.getElementById('push-to-talk-begin')
+/*****************************
+ * Push-To-Talk Pipeline runtime controller
+ * - Start/Stop recording
+ * - Show recording time
+ * - Push recorded audio into file-input
+ * - Send audio to pipeline entry point
+ *  16.09.2025 Daniel Graf
+ *****************************/
+let pttButton = document.getElementById('push-to-talk-begin')
 
 /*****************************
  * Init PTS into Pipelin
  *****************************/
-async function recordAudio() {
+async function initPushToTalk() {
   // already recording -> stop recording
   if (Recorder.isRecording) {
-    // userMediaRecorder.stop();
     const result = await Recorder.stop()
     stopTimer();
     pttButton.classList.remove('push-to-talk-active');
+
+    // push recording into file-input!
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(result.file);
     fileInput.files = dataTransfer.files;
+
+    // push recording into File-input-player
     const audioUrl = URL.createObjectURL(result.blob);
     fileInputPlayer.src = audioUrl;
-    //fileInputPlayer.load();
 
     // when file ready => start pipeline
     window.onAudioReady?.(result.blob, audioUrl);
@@ -30,10 +36,6 @@ async function recordAudio() {
   startTimer();
   pttButton.classList.add('push-to-talk-active');
   return;
-}
-
-function pushToFileInput(blob, file) {
-
 }
 
 /*****************************

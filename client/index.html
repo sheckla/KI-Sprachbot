@@ -46,18 +46,26 @@
         <tr>
           <td>
             <!-- Push-To-Talk & WakeWord -->
-            <button id="push-to-talk-begin" onclick="recordAudio()">Push-to-talk</button>
+            <button id="push-to-talk-begin" onclick="initPushToTalk()">Push-to-talk</button>
             <div id="ptt-info"></div>
             <button id="start" onclick="initWakeWord()" disabled>Start Listening</button>
             <button id="start-file" onclick="initWakeWordFromFile()" disabled>Audio einspielen!</button>
-            <input type="range" id="wakeword-threshold" min="0" max="1" step="0.01" value="0.5">
+            <select id="wake-word-model" onchange="updateModelSelection(this.value)">
+              <option value="./models/hey_rhasspy_v0.1.onnx">Hey Rasspy V0.1</option>
+              <!-- <option value="./models/hey_twi_bot_v1.onnx">Hey Twi-Bot V1</option> -->
+              <!-- <option value="./models/hey_twi_bot_v2.onnx">Hey Twi-Bot V2</option> -->
+              <option value="./models/hey_twi_bot_v3.onnx">Hey Twi-Bot V3</option>
+            </select>
+            <label for="wakeword-threshold">WakeWord : <a id="wakeword-threshold-display"></a></label>
+            <input type="range" id="wakeword-threshold" name="wakeword-threshold" min="0" max="1" step="0.025" value="0.5" oninput="updateWakeWordThresholdDisplay()">
             <div id="status">Idle</div>
             <div id="score"></div>
           </td>
           <td>
             <!-- File Input -->
-            <input id="file" class="input-file" type="file" accept="audio/*" style="width:100%" />
+            <input id="file" name="audio-input" class="input-file" type="file" accept="audio/*" oninput="updateAudioInputLabel()"/>
             <audio id="inputPlayer" controls></audio>
+            <label id="audio-player-label" for="inputPlayer"></label>
           </td>
         </tr>
       </table>
@@ -151,7 +159,7 @@
           </tr>
           <tr>
             <td>
-              <select id="tts-type">
+              <select id="tts-type" oninput="updateTTSOptions()">
                 <option value="coqui">Coqui TTS (Thorsten)</option>
                 <option value="piper">Piper TTS</option>
               </select>
@@ -191,7 +199,10 @@
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
   <script src="./js/beezlebugAPI.js"></script>
   <script src="./js/MediaRecorder.js"></script>
-  <script src="./js/recorder.js"></script>
+  <script src="./js/pttController.js"></script>
+  <script src="./js/pipeline.js"></script>
+  <script src="./js/WakeWordController.js"></script>
   <script src="./js/app.js"></script>
 </body>
+
 </html>

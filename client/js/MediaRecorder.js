@@ -1,3 +1,9 @@
+/*****************************
+ *  Recorder class for microphone input in browser
+ *  Uses MediaRecorder API
+ *  https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
+ *  16.09.2025 Daniel Graf
+ *****************************/
 class Recorder {
     static stream = null;
     static mediaRecorder = null;
@@ -59,7 +65,6 @@ class Recorder {
     }
 
 
-    // stoppt Tracks und räumt auf
     static clearStream() {
         Recorder.stream?.getTracks().forEach(t => t.stop());
         Recorder.stream = null;
@@ -67,7 +72,6 @@ class Recorder {
         Recorder.chunks = [];
     }
 
-    // Hilfsfunktion: Mime-Type finden
     static findSupportedMime() {
         const mimes = [
             'audio/webm;codecs=opus',

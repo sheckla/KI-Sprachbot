@@ -1,177 +1,53 @@
+/*****************************
+ * AI Voice Assistant
+ * - program entry point
+ * - manages most functions
+ *  17.09.2025 Daniel Graf
+ *****************************/
 // ===== Basic Variables =====
 const beezlebugApi = new BeezlebugAPI(API_URL);
+const wakewordController = new WakeWordController();
 const fileInput = document.getElementById("file");
 const fileInputPlayer = document.getElementById("inputPlayer");
 const loadingText = document.getElementById("loading");
-let onnxSession;
-let selectedTypeTTS = "coqui";
 let llmAnswer = "";
 
+function wakeWordDetected() {
+  console.log("WakeWord detected!");
+  // document.getElementById("status").innerText = "Wakeword erkannt!";
+  document.getElementById("push-to-talk-begin").disabled = false;
+  document.getElementById("push-to-talk-begin").focus();
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+  updateWakeWordThresholdDisplay();
+  updateAudioInputLabel();
+  updateTTSOptions();
+
   document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
   const model = "./models/hey_rhasspy_v0.1.onnx";
-  await loadModel(model);
+  await wakewordController.loadModel(model);
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
 });
 
-async function loadModel(name) {
-  console.log("loading Onxx-model " + name);
-  onnxSession = await ort.InferenceSession.create(name);
-  onnxSession.startProfiling();
-  console.log("model loaded!");
-}
-
-async function resampleTo16k(audioBuffer) {
-  const targetRate = 16000;
-  const offlineCtx = new OfflineAudioContext(
-    1, // Kanäle: mono
-    Math.ceil(audioBuffer.duration * targetRate),
-    targetRate
-  );
-
-  // Quelle aus dem alten Buffer
-  const source = offlineCtx.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(offlineCtx.destination);
-  source.start(0);
-
-  // Rendern → neues AudioBuffer mit 16 kHz mono
-  const rendered = await offlineCtx.startRendering();
-  return rendered.getChannelData(0); // Float32Array
-}
-
-
+/*****************************
+ *  Audio-File WakeWord Init
+ * - Handles file input and runs WakeWord detection
+ *****************************/
 async function initWakeWordFromFile() {
-  const file = document.getElementById("file").files?.[0];
-  if (!file) {
-    alert("Bitte zuerst eine Audiodatei auswählen!");
+  let threshold = document.getElementById("wakeword-threshold").value;
+  let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
+  if (result.hit) {
+    document.getElementById("status").innerText = "Wakeword erkannt! Score: " + result.score.toFixed(3);
+    wakeWordDetected();
+  } else {
+    let maxScore = Math.max(...result.scores);
+    document.getElementById("status").innerText = "Wakeword nicht erkannt! Max Score: " + maxScore.toFixed(3);
     return;
   }
 
-  const inputName = onnxSession.inputNames[0];
-  const outputName = onnxSession.outputNames[0];
-  document.getElementById("status").innerText = "Modell geladen ✅";
-
-  // Audio-Datei laden und decodieren
-  const audioCtx = new AudioContext();
-  const arrayBuffer = await file.arrayBuffer();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-
-  // Rohsamples vom 1. Kanal
-  let samples = audioBuffer.getChannelData(0);
-  // evtl downsampling?
-  // klappt nicht gut mit 44khz
-  // 22khz, 16khz sind ok!
-  samples = await resampleTo16k(audioBuffer);
-  const frameSize = 512;
-  const window = hannWindow(frameSize);
-  const fbanks = melFilterbank(frameSize, 16000, 96);
-  let frameBuffer = [];
-
-  // Datei frameweise durchlaufen
-  for (let pos = 0; pos + frameSize <= samples.length; pos += frameSize) {
-    const frame = samples.slice(pos, pos + frameSize);
-
-    // Fensterung + FFT
-    const framed = frame.map((v, i) => v * window[i]);
-    const magSpec = fftMag(framed);
-
-    // Mel-Spectrum (96 Bins)
-    const melSpec = fbanks.map(f => f.reduce((acc, w, i) => acc + w * magSpec[i], 0));
-    const logMel = melSpec.map(v => Math.log(v + 1e-6));
-
-    frameBuffer.push(logMel);
-    if (frameBuffer.length > 16) frameBuffer.shift();
-
-    if (frameBuffer.length === 16) {
-      const flat = frameBuffer.flat();
-      const tensor = new ort.Tensor("float32", Float32Array.from(flat), [1, 16, 96]);
-      const results = await onnxSession.run({ [inputName]: tensor });
-      const score = results[outputName].data[0];
-
-      console.log(`Frame @${(pos / 16000).toFixed(2)}s: Score=${score.toFixed(3)}`);
-      document.getElementById("score").innerText = "Score: " + score.toFixed(3);
-
-      if (score > 0.7) {
-        document.getElementById("status").innerText = "Wakeword erkannt! " + score.toFixed(3);
-        break; // stoppe nach Erkennung
-      }
-    }
-  }
-}
-// Hilfsfunktion: Hann-Fenster
-function hannWindow(length) {
-  const win = new Float32Array(length);
-  for (let i = 0; i < length; i++) {
-    win[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (length - 1)));
-  }
-  return win;
-}
-
-// Hilfsfunktion: FFT -> Magnitude Spectrum
-function fftMag(frame) {
-  const N = frame.length;
-  const re = new Float32Array(N);
-  const im = new Float32Array(N);
-  frame.forEach((val, i) => re[i] = val);
-
-  // Cooley–Tukey FFT (nur für Test, kann durch Lib ersetzt werden)
-  let step = 1;
-  for (let size = 2; size <= N; size *= 2) {
-    const half = size / 2;
-    const tableStep = N / size;
-    for (let i = 0; i < N; i += size) {
-      for (let j = 0; j < half; j++) {
-        const l = i + j;
-        const r = i + j + half;
-        const angle = (2 * Math.PI * j) / size;
-        const cos = Math.cos(angle);
-        const sin = -Math.sin(angle);
-        const tre = re[r] * cos - im[r] * sin;
-        const tim = re[r] * sin + im[r] * cos;
-        re[r] = re[l] - tre;
-        im[r] = im[l] - tim;
-        re[l] += tre;
-        im[l] += tim;
-      }
-    }
-    step *= 2;
-  }
-  const mags = new Float32Array(N / 2);
-  for (let i = 0; i < N / 2; i++) {
-    mags[i] = Math.sqrt(re[i] ** 2 + im[i] ** 2);
-  }
-  return mags;
-}
-
-// Mel-Filterbank bauen
-function melFilterbank(nfft, sampleRate, numMels) {
-  function hzToMel(hz) { return 2595 * Math.log10(1 + hz / 700); }
-  function melToHz(mel) { return 700 * (Math.pow(10, mel / 2595) - 1); }
-
-  const lowMel = hzToMel(0);
-  const highMel = hzToMel(sampleRate / 2);
-  const mels = new Float32Array(numMels + 2);
-  for (let i = 0; i < numMels + 2; i++) {
-    mels[i] = lowMel + (i * (highMel - lowMel)) / (numMels + 1);
-  }
-  const hz = Array.from(mels).map(melToHz);
-  const bins = hz.map(f => Math.floor((nfft + 1) * f / sampleRate));
-
-  const fb = [];
-  for (let i = 0; i < numMels; i++) {
-    const f = new Float32Array(nfft / 2);
-    for (let j = bins[i]; j < bins[i + 1]; j++) {
-      f[j] = (j - bins[i]) / (bins[i + 1] - bins[i]);
-    }
-    for (let j = bins[i + 1]; j < bins[i + 2]; j++) {
-      f[j] = (bins[i + 2] - j) / (bins[i + 2] - bins[i + 1]);
-    }
-    fb.push(f);
-  }
-  return fb;
 }
 
 /*****************************
@@ -457,7 +333,7 @@ function clearAll() {
 document.getElementById("push-to-talk-begin").addEventListener("keydown", (event) => {
   if (event.key === " " || event.key === "Spacebar") { // " " für moderne Browser, "Spacebar" für ältere
     event.preventDefault();
-    recordAudio()
+    initPushToTalk()
   }
 });
 
@@ -485,25 +361,38 @@ function getResponseTime(start, response) {
  *  FileInput Listener
  * - Preview audio file in player
  *****************************/
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files?.[0];
+function updateAudioInputLabel() {
+  const file = document.getElementById("file").files?.[0];
   if (!file) return;
-
+  if (file) {
+    document.getElementById("audio-player-label").innerText = `Ausgewählte Datei: ${file.name}`;
+  }
   const url = URL.createObjectURL(file);
   fileInputPlayer.src = url;
   fileInputPlayer.load();
-});
+}
 
 /*****************************
  *  TTS Type Listener
  * - show advanced Options for Piper
  *****************************/
-document.getElementById("tts-type").addEventListener("change", () => {
+function updateTTSOptions() {
   selectedTypeTTS = document.getElementById("tts-type").value;
   if (selectedTypeTTS === "coqui") {
     document.getElementById("piper-options").classList.add("hidden");
   } else {
     document.getElementById("piper-options").classList.remove("hidden");
   }
-})
+}
 
+/*****************************
+ *  WakeWord Threshold Slider
+ *****************************/
+function updateWakeWordThresholdDisplay() {
+  const val = document.getElementById("wakeword-threshold").value;
+  document.getElementById("wakeword-threshold-display").innerText = val;
+}
+
+function updateModelSelection(name) {
+  wakewordController.loadModel(name);
+}
