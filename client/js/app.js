@@ -12,9 +12,88 @@ const fileInputPlayer = document.getElementById("inputPlayer");
 const loadingText = document.getElementById("loading");
 let llmAnswer = "";
 
-function vad() {
+async function vad() {
   console.log("VAD Listening...");
+
+  // --- Setup WakeWordController ---
+  const wakeword = new WakeWordController();
+  await wakeword.loadProcessingModels();
+  await wakeword.loadWakeWordModel("./models/hey_rhasspy_v0.1.onnx");
+
+  // --- Audio Context + Mic Input ---
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const audioContext = new AudioContext({ sampleRate: 16000 });
+  const source = audioContext.createMediaStreamSource(stream);
+
+  // --- Worklet Code for Chunking ---
+  const processorCode = `
+class MicProcessor extends AudioWorkletProcessor {
+  bufferSize = 1280; // 80ms bei 16kHz
+  _buffer = new Float32Array(this.bufferSize);
+  _pos = 0;
+
+  process(inputs) {
+    const input = inputs[0][0];
+    if (input) {
+      for (let i = 0; i < input.length; i++) {
+        this._buffer[this._pos++] = input[i];
+        if (this._pos === this.bufferSize) {
+          // --- Wakeword-Chunks raus ---
+          const chunk = this._buffer.slice(0);
+
+          // --- Lautstärke berechnen (RMS) ---
+          let sum = 0;
+          for (let j = 0; j < chunk.length; j++) {
+            sum += chunk[j] * chunk[j];
+          }
+          const rms = Math.sqrt(sum / chunk.length);
+          const db = 20 * Math.log10(rms + 1e-8); // in dB
+
+          // zurück an Main-Thread
+          this.port.postMessage({ chunk, rms, db });
+
+          this._pos = 0;
+        }
+      }
+    }
+    return true;
+  }
 }
+registerProcessor('mic-processor', MicProcessor);
+`;
+
+
+  // --- Load Worklet ---
+  const blob = new Blob([processorCode], { type: "application/javascript" });
+  const workletURL = URL.createObjectURL(blob);
+  await audioContext.audioWorklet.addModule(workletURL);
+  const workletNode = new AudioWorkletNode(audioContext, "mic-processor");
+
+  // --- Connect Mic to Worklet ---
+  source.connect(workletNode);
+
+  // --- Handle Chunks from Worklet ---
+  workletNode.port.onmessage = async (e) => {
+    const { chunk, rms, db } = e.data;
+
+    // Lautstärke ausgeben
+    document.getElementById("volume").innerText =
+      `Volume: ${rms.toFixed(3)} (RMS), ${db.toFixed(1)} dB`;
+
+    // Wakeword-Erkennung
+    const score = await wakeword.processChunk(chunk);
+    if (score !== null) {
+      console.log("Wakeword score:", score.toFixed(3));
+      if (score > 0.5) {
+        console.log("✅ Wakeword erkannt!");
+        document.getElementById("status").innerText = "Wakeword erkannt!";
+        Recorder.start(); // oder dein Push-to-Talk triggern
+      }
+    }
+  };
+
+}
+
 
 function wakeWordDetected() {
   console.log("WakeWord detected!");
@@ -53,13 +132,13 @@ async function initWakeWordFromFile() {
     console.log("no scores bruh");
     return;
   }
-if (result.hit) {
-  let maxScore = Math.max(...result.scores);
-  document.getElementById("status").innerText = `Wakeword erkannt! Max-Score: ${maxScore.toFixed(5)}`;
-} else {
-  let maxScore = Math.max(...result.scores);
-  document.getElementById("status").innerText = `Kein Wakeword erkannt. Max-Score: ${maxScore.toFixed(5)}`;
-}
+  if (result.hit) {
+    let maxScore = Math.max(...result.scores);
+    document.getElementById("status").innerText = `Wakeword erkannt! Max-Score: ${maxScore.toFixed(5)}`;
+  } else {
+    let maxScore = Math.max(...result.scores);
+    document.getElementById("status").innerText = `Kein Wakeword erkannt. Max-Score: ${maxScore.toFixed(5)}`;
+  }
 
 
 }

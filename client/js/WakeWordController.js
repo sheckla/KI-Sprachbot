@@ -19,14 +19,12 @@ class WakeWordController {
 
     async loadProcessingModels() {
         const sessionOptions = { executionProviders: ['wasm'] };
-        // const wakewordModel = "./models/hey_rhasspy_v0.1.onnx";
         const embeddingsModel = "./models/openwakeword/embedding_model.onnx";
         const vadModel = "./models/openwakeword/silero_vad.onnx";
         const melspectogramModel = "./models/openwakeword/melspectrogram.onnx";
 
         this.melspectogramSession = await ort.InferenceSession.create(melspectogramModel, sessionOptions);
         this.embeddingSession = await ort.InferenceSession.create(embeddingsModel, sessionOptions);
-        // this.wakewordSession = await ort.InferenceSession.create(wakewordModel, sessionOptions);
         this.vadSession = await ort.InferenceSession.create(vadModel, sessionOptions);
     }
 
@@ -41,6 +39,7 @@ class WakeWordController {
         if (!file) return { hit: false, scores: [], max: 0 };
 
         this.melBuffer = [];
+        this.embeddingBuffer = [];
 
         // Audio laden und auf 16kHz Mono resamplen
         const audioCtx = new AudioContext();
@@ -61,6 +60,8 @@ class WakeWordController {
         padded.set(samples, pad.length);
         padded.set(pad, pad.length + samples.length);
         samples = padded;
+        console.log("audio length (samples): " + samples.length);
+        console.log(samples.length / 16000 + " sec");
 
         // Embedding-Buffer mit 16 Null-Vektoren starten
         this.embeddingBuffer = [];
@@ -87,6 +88,7 @@ class WakeWordController {
 
 
     // step 1: Mel-Spectogram + Buffer
+    // 1280 frames!
     async processChunk(chunk) {
 
         // prcoess via onnx
