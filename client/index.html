@@ -10,15 +10,15 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Assistant:wght@200..800&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
     rel="stylesheet">
-  <link rel="icon" type="image/png" sizes="32x32" href="icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./img/icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./img/icon.png">
 </head>
 
 <body>
   <title>Twi-Bot KI-Pipeline Test</title>
   <div class="container">
     <div>
-      <img src="logo.png" alt="twi-bot logo" class="logo">
+      <img src="./img/logo.png" alt="twi-bot logo" class="logo">
     </div>
 
     <!-- === Introduction === -->
@@ -48,8 +48,8 @@
             <!-- Push-To-Talk & WakeWord -->
             <button id="push-to-talk-begin" onclick="initPushToTalk()">Push-to-talk</button>
             <div id="ptt-info"></div>
-            <button id="start" onclick="vad()" disabled>Lauschen :)</button>
-            <button id="start-file" onclick="initWakeWordFromFile()" disabled>Audio einspielen!</button>
+            <button id="start" onclick="listenForVoiceActivation()" disabled>Lauschen :)</button>
+            <button id="start-file" onclick="processAudioWithWakeWordDetection()" disabled>Audio einspielen!</button>
             <select id="wake-word-model" onchange="updateModelSelection(this.value)">
               <option value="./models/hey_rhasspy_v0.1.onnx">Hey Rasspy V0.1</option>
               <!-- <option value="./models/hey_twi_bot_v1.onnx">Hey Twi-Bot V1</option> -->
@@ -201,9 +201,7 @@
   <script src="./js/beezlebugAPI.js"></script>
   <script src="./js/MediaRecorder.js"></script>
   <script src="./js/pttController.js"></script>
-  <script src="./js/pipeline.js"></script>
-  <script src="./js/WakeWordController.js"></script>
+  <script src="./js/OpenWakeWordController.js"></script>
   <script src="./js/app.js"></script>
 </body>
-
 </html>

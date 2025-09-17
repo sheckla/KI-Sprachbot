@@ -6,17 +6,38 @@
  *****************************/
 // ===== Basic Variables =====
 const beezlebugApi = new BeezlebugAPI(API_URL);
-const wakewordController = new WakeWordController();
+const wakewordController = new OpenWakeWordController();
 const fileInput = document.getElementById("file");
-const fileInputPlayer = document.getElementById("inputPlayer");
-const loadingText = document.getElementById("loading");
-let llmAnswer = "";
 
-async function vad() {
+/*************************************************************
+ *  Init Application
+ *************************************************************/
+document.addEventListener("DOMContentLoaded", async () => {
+  updateWakeWordThresholdDisplay();
+  updateAudioInputLabel();
+  updateTTSOptions();
+  updateModelSelection(document.getElementById("wake-word-model").value);
+
+  document.getElementById("start").disabled = true;
+  document.getElementById("start-file").disabled = true;
+  // await wakewordController.loadWakeWordModel(model);
+  await wakewordController.loadProcessingModels();
+  console.log("WakeWordController ready");
+  document.getElementById("start").disabled = false;
+  document.getElementById("start-file").disabled = false;
+});
+
+/*****************************
+ *  Activate WakeWord/VAD Listening
+ * - AudioWorklet to chunk audio into 1280 samples (80ms @16kHz = 1240 samples)
+ * - Sends chunks to WakeWordController for detection
+ * - On detection, triggers Recorder.start()
+ *****************************/
+async function listenForVoiceActivation() {
   console.log("VAD Listening...");
 
   // --- Setup WakeWordController ---
-  const wakeword = new WakeWordController();
+  const wakeword = new OpenWakeWordController();
   await wakeword.loadProcessingModels();
   await wakeword.loadWakeWordModel("./models/hey_rhasspy_v0.1.onnx");
 
@@ -77,13 +98,13 @@ registerProcessor('mic-processor', MicProcessor);
     const { chunk, rms, db } = e.data;
 
     // Lautstärke ausgeben
-    document.getElementById("volume").innerText =
-      `Volume: ${rms.toFixed(3)} (RMS), ${db.toFixed(1)} dB`;
+    document.getElementById("volume").innerText = "Volume: " + rms.toFixed(3) + " (RMS), " + db.toFixed(1) + " dB";
 
     // Wakeword-Erkennung
     const score = await wakeword.processChunk(chunk);
     if (score !== null) {
       console.log("Wakeword score:", score.toFixed(3));
+      document.getElementById("score").innerText = "Wakeword Score: " + score.toFixed(3);
       if (score > 0.5) {
         console.log("✅ Wakeword erkannt!");
         document.getElementById("status").innerText = "Wakeword erkannt!";
@@ -91,40 +112,13 @@ registerProcessor('mic-processor', MicProcessor);
       }
     }
   };
-
 }
-
-
-function wakeWordDetected() {
-  console.log("WakeWord detected!");
-  // document.getElementById("status").innerText = "Wakeword erkannt!";
-  document.getElementById("push-to-talk-begin").disabled = false;
-  document.getElementById("push-to-talk-begin").focus();
-}
-
-/*************************************************************
- *  Init Application
- *************************************************************/
-document.addEventListener("DOMContentLoaded", async () => {
-  updateWakeWordThresholdDisplay();
-  updateAudioInputLabel();
-  updateTTSOptions();
-  updateModelSelection(document.getElementById("wake-word-model").value);
-
-  document.getElementById("start").disabled = true;
-  document.getElementById("start-file").disabled = true;
-  // await wakewordController.loadWakeWordModel(model);
-  await wakewordController.loadProcessingModels();
-  console.log("WakeWordController ready");
-  document.getElementById("start").disabled = false;
-  document.getElementById("start-file").disabled = false;
-});
 
 /*****************************
  *  Audio-File WakeWord Init
  * - Handles file input and runs WakeWord detection
  *****************************/
-async function initWakeWordFromFile() {
+async function processAudioWithWakeWordDetection() {
   let threshold = parseFloat(document.getElementById("wakeword-threshold").value) || 0.5;
   let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
   console.log(result);
@@ -134,10 +128,10 @@ async function initWakeWordFromFile() {
   }
   if (result.hit) {
     let maxScore = Math.max(...result.scores);
-    document.getElementById("status").innerText = `Wakeword erkannt! Max-Score: ${maxScore.toFixed(5)}`;
+    document.getElementById("status").innerText = "Wake word erkannt, Max Score: " + maxScore.toFixed(5);
   } else {
     let maxScore = Math.max(...result.scores);
-    document.getElementById("status").innerText = `Kein Wakeword erkannt. Max-Score: ${maxScore.toFixed(5)}`;
+    document.getElementById("status").innerText = "Kein Wake word erkannt, Max Score: " + maxScore.toFixed(5);
   }
 
 
@@ -182,6 +176,11 @@ async function startSTT() {
   }
 }
 
+/*****************************
+ *  Emotion STT Step
+ * - Handles file input and sends to Emotion STT API
+ * - Currently just for demo uses
+ *****************************/
 async function startEmotionSTT() {
   // check empty file
   const file = document.getElementById("file").files?.[0];
@@ -248,7 +247,7 @@ async function startLLM() {
     let responseTime = getResponseTime(clientStartTime, response.ms);
 
     // update html
-    llmAnswer = response.reply;
+    window.llmAnswer = response.reply;
     document.getElementById("llm-processing").classList.remove("processing");
     document.getElementById("llm-success").classList.add("success");
     document.getElementById("llm-text").textContent = response.reply;
@@ -328,21 +327,21 @@ async function startPipeline() {
   let times = [];
 
   // STT Step
-  loadingText.textContent = "(wird transkribiert...";
+  document.getElementById("loading").textContent = "(wird transkribiert...";
   let ms = await startSTT();
   times.push(ms)
   let transcription = document.getElementById("stt-text").textContent.trim();
   document.getElementById("llm-question").value = transcription;
 
   // LLM Step
-  loadingText.textContent = "(warte auf Antwort...)";
+  document.getElementById("loading").textContent = "(warte auf Antwort...)";
   ms = await startLLM();
   times.push(ms);
   let answer = document.getElementById("llm-text").textContent.trim();
   document.getElementById("tts-text").value = answer;
 
   // TTS Step
-  loadingText.textContent = "(Audio wird generiert...)";
+  document.getElementById("loading").textContent = "(Audio wird generiert...)";
   ms = await startTTS();
   times.push(ms);
 
@@ -368,7 +367,7 @@ async function startPipeline() {
   document.getElementById("final-success").classList.remove("processing");
   document.getElementById("final-success").classList.add("success");
   // document.getElementById("loading").textContent = "Anfrage erfolgreich durchgeführt!";
-  document.getElementById("loading").textContent = llmAnswer;
+  document.getElementById("loading").textContent = window.llmAnswer;
 }
 
 /*****************************
@@ -381,6 +380,7 @@ function clearConversation() {
   document.getElementById("conversation").textContent = " none";
 }
 
+// clear stt step
 function clearSTT() {
   document.getElementById("stt-text").textContent = "(Sende eine Audio zum Transkribieren ein...)";
   document.getElementById("stt-text").value = "";
@@ -391,6 +391,7 @@ function clearSTT() {
   document.getElementById("stt-success").classList.remove("processing");
 }
 
+// clear LLM step
 function clearLLM() {
   document.getElementById("llm-text").textContent = "(Frage den Chatbot für eine Antwort!)";
   document.getElementById("llm-ms-server").textContent = "";
@@ -400,6 +401,7 @@ function clearLLM() {
   document.getElementById("llm-success").classList.remove("processing");
 }
 
+// clear TTS step
 function clearTTS() {
   document.getElementById("tts-text").textContent = "";
   document.getElementById("tts-ms-server").textContent = "";
@@ -409,7 +411,6 @@ function clearTTS() {
   document.getElementById("tts-success").classList.remove("success");
 }
 
-// clear all button
 function clearAll() {
   clearSTT();
   clearLLM();
@@ -422,7 +423,9 @@ function clearAll() {
   document.getElementById("loading").textContent = "";
 }
 
-// Push-to-Talk Button
+/*****************************
+ *  Push to Talk Via Spacebar
+ *****************************/
 document.getElementById("push-to-talk-begin").addEventListener("keydown", (event) => {
   if (event.key === " " || event.key === "Spacebar") { // " " für moderne Browser, "Spacebar" für ältere
     event.preventDefault();
@@ -451,6 +454,23 @@ function getResponseTime(start, response) {
 }
 
 /*****************************
+ *  Wake Word Detection
+ * - initiates push-to-talk
+ *****************************/
+function wakeWordDetected() {
+  console.log("WakeWord detected!");
+  // document.getElementById("status").innerText = "Wakeword erkannt!";
+  document.getElementById("push-to-talk-begin").disabled = false;
+  document.getElementById("push-to-talk-begin").focus();
+  document.getElementById("push-to-talk-begin").click();
+}
+
+
+/*************************************************************
+ *  Update Functions
+ *************************************************************/
+
+/*****************************
  *  FileInput Listener
  * - Preview audio file in player
  *****************************/
@@ -458,11 +478,11 @@ function updateAudioInputLabel() {
   const file = document.getElementById("file").files?.[0];
   if (!file) return;
   if (file) {
-    document.getElementById("audio-player-label").innerText = `Ausgewählte Datei: ${file.name}`;
+    document.getElementById("audio-player-label").innerText = "Datei: " + file.name;
   }
   const url = URL.createObjectURL(file);
-  fileInputPlayer.src = url;
-  fileInputPlayer.load();
+  document.getElementById("inputPlayer").src = url;
+  document.getElementById("inputPlayer").load();
 }
 
 /*****************************
@@ -486,6 +506,9 @@ function updateWakeWordThresholdDisplay() {
   document.getElementById("wakeword-threshold-display").innerText = val;
 }
 
+/*****************************
+ *  Wake Workd Model Selection Update
+ *****************************/
 function updateModelSelection(name) {
   wakewordController.loadWakeWordModel(name);
 }

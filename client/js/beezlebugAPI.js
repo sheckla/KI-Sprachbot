@@ -1,9 +1,10 @@
+/*****************************
+ * ===== Beezlebug API Class =====
+ * - Handles all API requests to the Beezlebug backend
+ * - Manages conversation state for LLM
+ *  17.09.2025 Daniel Graf
+*****************************/
 const API_URL = "https://one.beezlebug.com/ki-sprachbot";
-
-/* ===== Beezlebug API Class =====
-* - Handles all API requests to the Beezlebug backend
-* - Manages conversation state for LLM
-*/
 class BeezlebugAPI {
   conversationId = "";
 

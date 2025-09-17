@@ -1,12 +1,18 @@
 
 /*************************************************************
- *
+ * Open Wake Word Controller with processing functions for Audio Chunks
  * 16000 Samples => 1 sec audio
  * inference every 0.08 sec => 1280 Samples per Chunk
  * min required samples = 16 * 1280 = 20480 (1.28 sec)
+ *
+ * openWakeWord:
+ * https://github.com/dscripka/openWakeWord
+ *
+ * Main processing steps have been adapted from:
+ * https://deepcorelabs.com/open-wake-word-on-the-web/
 *************************************************************/
 const FRAME_SIZE = 1280;
-class WakeWordController {
+class OpenWakeWordController {
     melspectogramSession = null;
     embeddingSession = null;
     wakewordSession = null;
