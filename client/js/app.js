@@ -12,6 +12,10 @@ const fileInputPlayer = document.getElementById("inputPlayer");
 const loadingText = document.getElementById("loading");
 let llmAnswer = "";
 
+function vad() {
+  console.log("VAD Listening...");
+}
+
 function wakeWordDetected() {
   console.log("WakeWord detected!");
   // document.getElementById("status").innerText = "Wakeword erkannt!";

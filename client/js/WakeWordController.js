@@ -1,3 +1,11 @@
+
+/*************************************************************
+ *
+ * 16000 Samples => 1 sec audio
+ * inference every 0.08 sec => 1280 Samples per Chunk
+ * min required samples = 16 * 1280 = 20480 (1.28 sec)
+*************************************************************/
+const FRAME_SIZE = 1280;
 class WakeWordController {
     melspectogramSession = null;
     embeddingSession = null;
@@ -45,18 +53,9 @@ class WakeWordController {
         source.start(0);
         let samples = (await offlineCtx.startRendering()).getChannelData(0);
 
-        const frameSize = 1280;
-        const minRequiredSamples = 16 * frameSize;
-        // if (audioData.length < minRequiredSamples) {
-            // const padding = new Float32Array(minRequiredSamples - audioData.length);
-            // const newAudioData = new Float32Array(minRequiredSamples);
-            // newAudioData.set(audioData, 0);
-            // newAudioData.set(padding, audioData.length);
-            // audioData = newAudioData;
-        // }
-
         // Silence-Padding wie in Python (1s vorne + 1s hinten)
-        const pad = new Float32Array(16000);
+        const pad = new Float32Array(12400);
+        console.log(pad.length);
         let padded = new Float32Array(pad.length + samples.length + pad.length);
         padded.set(pad, 0);
         padded.set(samples, pad.length);
@@ -73,8 +72,8 @@ class WakeWordController {
         const scores = [];
 
         // Kein Overlap → Schrittweite = frameSize
-        for (let i = 0; i < Math.floor(samples.length / frameSize); i++) {
-            const frame = samples.subarray(i * frameSize, (i + 1) * frameSize);
+        for (let i = 0; i < Math.floor(samples.length / FRAME_SIZE); i++) {
+            const frame = samples.subarray(i * FRAME_SIZE, (i + 1) * FRAME_SIZE);
             const score = await this.processChunk(frame);
             if (score !== null) {
                 scores.push(score);
@@ -87,19 +86,20 @@ class WakeWordController {
 
 
 
-
+    // step 1: Mel-Spectogram + Buffer
     async processChunk(chunk) {
-        // chunk = Float32Array mit 1280 Samples @16kHz
+
+        // prcoess via onnx
         const melIn = new ort.Tensor("float32", chunk, [1, chunk.length]);
         const melOut = await this.melspectogramSession.run({ [this.melspectogramSession.inputNames[0]]: melIn });
         let melData = melOut[this.melspectogramSession.outputNames[0]].data;
 
-        // Normierung wie in openWakeWord
+        // magic from https://deepcorelabs.com/open-wake-word-on-the-web/
         for (let j = 0; j < melData.length; j++) {
             melData[j] = (melData[j] / 10.0) + 2.0;
         }
 
-        // 5 Frames à 32 Features ins Buffer (immer Kopien!)
+        // onxx runtime reuses output buffers => must create copies
         for (let i = 0; i < 5; i++) {
             this.melBuffer.push(new Float32Array(melData.subarray(i * 32, (i + 1) * 32)));
         }
@@ -108,25 +108,28 @@ class WakeWordController {
     }
 
     async _maybeRunEmbedding() {
-        if (this.melBuffer.length < 76) return null;
 
-        const windowFrames = this.melBuffer.slice(0, 76);
+        if (this.melBuffer.length < 76) return null;
+        // while (this.melBuffer.length < 76) {
         this.melBuffer.splice(0, 8); // Stride = 8 Frames (wie im Web-Repo)
 
-        const flatMel = new Float32Array(76 * 32);
-        for (let i = 0; i < windowFrames.length; i++) {
-            flatMel.set(windowFrames[i], i * 32);
-        }
+            const windowFrames = this.melBuffer.slice(0, 76);
+            // this.melBuffer.splice(0, 8); // Stride = 8 Frames (wie im Web-Repo)
+            const flatMel = new Float32Array(76 * 32);
+            for (let i = 0; i < windowFrames.length; i++) {
+                flatMel.set(windowFrames[i], i * 32);
+            }
 
-        const embIn = new ort.Tensor("float32", flatMel, [1, 76, 32, 1]);
-        const embOut = await this.embeddingSession.run({ [this.embeddingSession.inputNames[0]]: embIn });
-        const embedding = new Float32Array(embOut[this.embeddingSession.outputNames[0]].data);
+            const embIn = new ort.Tensor("float32", flatMel, [1, 76, 32, 1]);
+            const embOut = await this.embeddingSession.run({ [this.embeddingSession.inputNames[0]]: embIn });
+            const embedding = new Float32Array(embOut[this.embeddingSession.outputNames[0]].data);
 
-        // Embedding Buffer: exakt 16 behalten
-        if (this.embeddingBuffer.length >= 16) this.embeddingBuffer.shift();
-        this.embeddingBuffer.push(embedding);
+            // Embedding Buffer: exakt 16 behalten
+            if (this.embeddingBuffer.length >= 16) this.embeddingBuffer.shift();
+            this.embeddingBuffer.push(embedding);
 
-        return this._maybeRunWakeword();
+            return this._maybeRunWakeword();
+        // }
     }
 
     async _maybeRunWakeword() {

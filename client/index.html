@@ -48,7 +48,7 @@
             <!-- Push-To-Talk & WakeWord -->
             <button id="push-to-talk-begin" onclick="initPushToTalk()">Push-to-talk</button>
             <div id="ptt-info"></div>
-            <button id="start" onclick="initWakeWord()" disabled>Start Listening</button>
+            <button id="start" onclick="vad()" disabled>Lauschen :)</button>
             <button id="start-file" onclick="initWakeWordFromFile()" disabled>Audio einspielen!</button>
             <select id="wake-word-model" onchange="updateModelSelection(this.value)">
               <option value="./models/hey_rhasspy_v0.1.onnx">Hey Rasspy V0.1</option>
