@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
+  updateMeter("vad", 0.9);
   // buttonListenForVoiceActivation();
 });
 
@@ -48,8 +49,9 @@ async function buttonListenForVoiceActivation() {
   async function processAudioChunk({ chunk }) {
     // Wakeword-Erkennung
     const vadScore = await wakewordController.runVAD(chunk);
+    updateMeter("vad", vadScore);
     const vadFired = vadScore > (1.0 - document.getElementById("vad-threshold").value);
-    console.log("Vad fired: " + vadFired, vadScore.toFixed(3));
+    // console.log("Vad fired: " + vadFired, vadScore.toFixed(3));
     let light = document.getElementById("feedback-light");
     if (vadFired) {
       light.classList.add("push-to-talk-active");
@@ -59,10 +61,11 @@ async function buttonListenForVoiceActivation() {
       light.innerText = "-";
     }
     const score = await wakewordController.processChunk(chunk);
+    updateMeter("wakeword", score);
     if (score !== null) {
       // console.log("Wakeword score:", score.toFixed(3));
-      document.getElementById("score").innerText = "Wakeword Score: " + score.toFixed(3);
-      if (score > 0.5) {
+      // document.getElementById("score").innerText = "Wakeword Score: " + score.toFixed(3);
+      if (score > document.getElementById("wakeword-threshold").value) {
         console.log("✅ Wakeword erkannt!");
         document.getElementById("status").innerText = "Wakeword erkannt!";
         // timeout!
@@ -392,6 +395,17 @@ function updateVADThresholdDisplay() {
 function updateModelSelection(name) {
   wakewordController.loadWakeWordModel(name);
 }
+
+function updateMeter(id, value) {
+  const meter = document.getElementById(id + "-meter");
+  const label = document.getElementById(id + "-meter-value");
+
+  // clamp 0–1
+  const clamped = Math.max(0, Math.min(1, value));
+  meter.style.width = (clamped * 100) + "%";
+  label.textContent = clamped.toFixed(2);
+}
+
 
 /*****************************
  *  Push to Talk Via Spacebar
