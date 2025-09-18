@@ -87,11 +87,8 @@
           </td>
           <td>
             <!-- Pipeline Output -->
-            <div id="final-success" class="answer">
-              <a id="loading"></a><br><br>
-              <a id="total-ms-server"></a><br>
-              <a id="total-ms-network"></a><br>
-              <a id="total-ms-total"></a>
+            <div id="final-wrapper" class="answer">
+              <a id="final-text">(hier wird die Antwort stehen)</a>
             </div>
           </td>
         </tr>
@@ -115,15 +112,12 @@
               <option value="small">Kleines (schnelleres) Whisper Modell</option>
               <option value="medium">Mittleres Whisper Modell</option>
             </select>
-            <button id="stt-button" onclick="startSTT()">→ Transkribieren</button>
-            <button id="stt-button" onclick="startEmotionSTT()">→ Emotion Analysieren</button>
+            <button onclick="startSTT()">→ Transkribieren</button>
+            <button onclick="startEmotionSTT()">→ Emotion Analysieren</button>
           </td>
           <td id="stt-processing">
-            <div id="stt-success" class="answer">
-              <a id="stt-text">(Sende eine Audio zum Transkribieren ein...)</a><br><br>
-              <a id="stt-ms-server"></a><br>
-              <a id="stt-ms-network"></a><br>
-              <a id="stt-ms-total"></a>
+            <div id="stt-wrapper" class="answer">
+              <a id="stt-text">(Sende eine Audio zum Transkribieren ein...)</a>
             </div>
           </td>
         </tr>
@@ -145,11 +139,8 @@
             <button id="llm-ask" onclick="startLLM()">→ Chatbot fragen</button>
           </td>
           <td id="llm-processing">
-            <div id="llm-success" class="answer">
-              <a id="llm-text">(Frage den Chatbot für eine Antwort!)</a><br><br>
-              <a id="llm-ms-server"></a><br>
-              <a id="llm-ms-network"></a><br>
-              <a id="llm-ms-total"></a>
+            <div id="llm-wrapper" class="answer">
+              <a id="llm-text">(Frage den Chatbot für eine Antwort!)</a>
             </div>
           </td>
         </tr>
@@ -168,7 +159,7 @@
                 <option value="piper">Piper TTS</option>
               </select>
               Text
-              <input id="tts-text" type="text" placeholder="Text für TTS" /><br>
+              <input id="tts-input" type="text" placeholder="Text für TTS" /><br>
               <div id="piper-options" class="hidden">
 
                 Emotion
@@ -185,15 +176,12 @@
                 Geschwindigkeit
                 <input id="tts-speed" value="0.95">
               </div>
-              <button id="tts" onclick="startTTS()">→ TTS generieren</button><br>
+              <button onclick="startTTS()">→ TTS generieren</button><br>
             </td>
             <td>
-              <div id="tts-success" class="answer">
-                (Generierte Audio wird hier angezeigt und abgespielt...)
+              <div id="tts-wrapper" class="answer">
                 <audio id="ttsPlayer" controls></audio><br>
-                <a id="tts-ms-server"></a><br>
-                <a id="tts-ms-network"></a><br>
-                <a id="tts-ms-total"></a>
+                <a id="tts-text">(Generierte Audio wird hier angezeigt und abgespielt...)</a>
               </div>
             </td>
           </tr>
@@ -205,6 +193,7 @@
   <script src="./js/MediaRecorder.js"></script>
   <script src="./js/pttController.js"></script>
   <script src="./js/OpenWakeWordController.js"></script>
+  <script src="./js/PipelineController.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

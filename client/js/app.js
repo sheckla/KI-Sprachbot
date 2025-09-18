@@ -6,7 +6,7 @@
  *  17.09.2025 Daniel Graf
  *****************************/
 // ===== Basic Variables =====
-const beezlebugApi = new BeezlebugAPI(API_URL);
+const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
 const fileInput = document.getElementById("file");
 
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
-  buttonListenForVoiceActivation();
+  // buttonListenForVoiceActivation();
 });
 
 /*****************************
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function buttonListenForVoiceActivation() {
   await Recorder.loadWorklet();
 
-  async function processAudioChunk({ chunk}) {
+  async function processAudioChunk({ chunk }) {
     // Wakeword-Erkennung
     const vadScore = await wakewordController.runVAD(chunk);
     const vadFired = vadScore > (1.0 - document.getElementById("vad-threshold").value);
@@ -105,35 +105,27 @@ async function startSTT() {
   // check empty file
   const file = document.getElementById("file").files?.[0];
   if (!file) return alert("Bitte eine Audiodatei wählen.");
-  const quality = document.getElementById("whisper-model").value
 
-  let clientStartTime = Date.now();
+  // ui -> processing
   clearSTT();
   document.getElementById("stt-text").textContent = "(wird transkribiert...)";
-  document.getElementById("stt-success").classList.add("processing");
-  try {
-    const response = await beezlebugApi.stt_POST(file, quality);
-    let responseTime = getResponseTime(clientStartTime, response.ms);
-    // update html
-    document.getElementById("stt-success").classList.remove("processing");
-    document.getElementById("stt-success").classList.add("success");
-    document.getElementById("stt-text").textContent = response.transcription;
-    document.getElementById("stt-ms-server").textContent = "Bearbeitungsdauer: " + responseTime.server + " ms";
-    document.getElementById("stt-ms-network").textContent = "Netzwerklatenz: " + responseTime.network + " ms";
-    document.getElementById("stt-ms-total").textContent = "Gesamt: " + responseTime.total + " ms";
-    document.getElementById("llm-question").value = response.transcription;
-    document.getElementById("stt-text").textContent += "\n";
+  document.getElementById("stt-wrapper").classList.add("processing");
 
-    if (response.emotion) {
-      response.emotion.forEach(element => {
-        element.score = Number.parseFloat(element.score * 100).toPrecision(2) + "%";
-      });
-      document.getElementById("stt-text").textContent += JSON.stringify(response.emotion);
-    }
-    return responseTime;
-  } catch (e) {
-    console.error(e);
-  }
+  // prcoess STT step
+  const quality = document.getElementById("whisper-model").value
+  let result = await pipelineController.speechToText(file, quality);
+  // show output
+  document.getElementById("stt-wrapper").classList.remove("processing");
+  document.getElementById("stt-wrapper").classList.add("success");
+  document.getElementById("stt-text").textContent = result.text;
+
+  // stt output to llm input
+  document.getElementById("llm-question").value = result.text;
+
+  // append response times
+  let wrapper = buildResponseWrapper(result.responseTimes, " s");
+  document.getElementById("stt-text").appendChild(wrapper);
+  return result;
 }
 
 /*****************************
@@ -144,49 +136,28 @@ async function startSTT() {
 async function startEmotionSTT() {
   // check empty file
   const file = document.getElementById("file").files?.[0];
-  if (!file) return alert("Bitte eine Audiodatei wählen.");
+  if (!file) {
+    fileInput.focus();
+    return alert("Bitte eine Audiodatei wählen.");
+  }
 
-  let clientStartTime = Date.now();
+  // ui -> processing
   clearSTT();
   document.getElementById("stt-text").textContent = "(Emotionen werden analysiert...)";
-  document.getElementById("stt-success").classList.add("processing");
-  try {
-    const response = await beezlebugApi.stt_emotion_POST(file);
-    let responseTime = getResponseTime(clientStartTime, response.ms);
-    // update html
-    document.getElementById("stt-text").textContent = "";
-    document.getElementById("stt-success").classList.remove("processing");
-    document.getElementById("stt-success").classList.add("success");
-    document.getElementById("stt-ms-server").textContent = "Bearbeitungsdauer: " + responseTime.server + " ms";
-    document.getElementById("stt-ms-network").textContent = "Netzwerklatenz: " + responseTime.network + " ms";
-    document.getElementById("stt-ms-total").textContent = "Gesamt: " + responseTime.total + " ms";
-    document.getElementById("stt-text").textContent += "\n";
+  document.getElementById("stt-wrapper").classList.add("processing");
 
-    let str = "";
-    if (response.emotion) {
-      response.emotion.forEach(element => {
-        element.score = Number.parseFloat(element.score * 100).toPrecision(2) + "%";
-        switch (element.label) {
-          case "neu":
-            element.label = "Neutral";
-            break;
-          case "hap":
-            element.label = "Glücklich";
-            break;
-          case "sad":
-            element.label = "Traurig";
-            break;
-          case "ang":
-            element.label = "Wütend";
-            break;
-        }
-        str += element.label + ": " + element.score + "\n";
-      });
-      document.getElementById("stt-text").textContent += str;
-    }
-  } catch (e) {
-    console.error(e);
-  }
+  // prcoess STT step
+  let result = await pipelineController.speechToEmotion(file);
+  // show output
+  document.getElementById("stt-wrapper").classList.remove("processing");
+  document.getElementById("stt-wrapper").classList.add("success");
+  document.getElementById("stt-text").textContent = result.text;
+
+  // append response times
+  document.getElementById("stt-text").appendChild(buildResponseWrapper(result.emotions));
+  document.getElementById("stt-text").appendChild(document.createElement("br"));
+  document.getElementById("stt-text").appendChild(buildResponseWrapper(result.responseTimes));
+  return result;
 }
 
 /*****************************
@@ -198,79 +169,63 @@ async function startLLM() {
   const question = document.getElementById("llm-question").value.trim();
   if (!question) return alert("Bitte eine Frage eingeben.");
 
-  let clientStartTime = Date.now();
+  // ui -> processing
   clearLLM();
   document.getElementById("llm-text").textContent = "(Warte auf Antwort...)";
-  document.getElementById("llm-success").classList.add("processing");
-  try {
-    const response = await beezlebugApi.llm_POST(question);
-    let responseTime = getResponseTime(clientStartTime, response.ms);
+  document.getElementById("llm-wrapper").classList.add("processing");
 
-    // update html
-    window.llmAnswer = response.reply;
-    document.getElementById("llm-processing").classList.remove("processing");
-    document.getElementById("llm-success").classList.add("success");
-    document.getElementById("llm-text").textContent = response.reply;
-    document.getElementById("llm-ms-server").textContent = "Bearbeitungszeit: " + responseTime.server + " ms";
-    document.getElementById("llm-ms-network").textContent = "Netzwerklatenz: " + responseTime.network + " ms";
-    document.getElementById("llm-ms-total").textContent = "Gesamt: " + responseTime.total + " ms";
-    document.getElementById("tts-text").value = response.reply;
-    document.getElementById("llm-success").classList.add("success");
-    document.getElementById("llm-success").classList.remove("processing");
+  const result = await pipelineController.startLargeLanguageModelInference(question);
 
-    return responseTime;
-  } catch (e) {
-    console.error(e);
-  }
+  // show output
+  document.getElementById("llm-wrapper").classList.remove("processing");
+  document.getElementById("llm-wrapper").classList.add("success");
+  document.getElementById("llm-text").textContent = result.text;
+  window.llmAnswer = result.text;
+
+  // llm output to tts input
+  document.getElementById("tts-input").value = result.text;
+
+  // append response times
+  let wrapper = buildResponseWrapper(result.responseTimes, " s");
+  document.getElementById("llm-text").appendChild(wrapper);
+
+  return result;
 }
 
 /*****************************
  *  Text-To-Speech Step
  * - Sends text to TTS API and plays audio response
+ * TODO: change to 16k for performance (latency)
  *****************************/
 async function startTTS() {
   // check empty
-  const text = document.getElementById("tts-text").value.trim();
+  const text = document.getElementById("tts-input").value.trim();
   if (!text) return alert("Bitte eine Antwort zum Vorlesen eingeben.");
 
   let selectedEmotion = document.getElementById("thorsten-emotion").value;
   let selectedSpeed = document.getElementById("tts-speed").value;
 
+  // ui -> processing
   clearTTS();
-  document.getElementById("tts-success").classList.add("processing");
-  const clientStartTime = Date.now();
-  try {
-    let response;
-    if (selectedTypeTTS === "piper") {
-      console.log("piper");
-      response = await beezlebugApi.tts_POST_piper(text, selectedEmotion, selectedSpeed);
-    } else {
-      console.log("coqui");
-      response = await beezlebugApi.tts_POST_coqui(text);
-    }
-    let responseTime = getResponseTime(clientStartTime, response.ms);
-    // Oops! No response
-    if (!response.audio_data_url) {
-      return alert("Keine Audiodaten erhalten.");
-    }
-
-    const player = document.getElementById("ttsPlayer");
-    player.src = response.audio_data_url; // apply audio data
-    // TODO toggle autoplay
-    player.play().catch(() => { });
-
-    // update html
-    document.getElementById("tts-success").classList.remove("processing");
-    document.getElementById("tts-success").classList.add("success");
-    document.getElementById("tts-ms-server").textContent = "Bearbeitungszeit: " + responseTime.server + " ms";
-    document.getElementById("tts-ms-network").textContent = "Netzwerklatenz: " + responseTime.network + " ms";
-    document.getElementById("tts-ms-total").textContent = "Gesamt: " + responseTime.total + " ms";
-
-
-    return responseTime;
-  } catch (e) {
-    console.error(e);
+  document.getElementById("tts-wrapper").classList.add("processing");
+  const result = await pipelineController.generateTextToSpeech(text, selectedTypeTTS, selectedEmotion, selectedSpeed)
+  if (!result.audio_data_url) {
+    return alert("Keine Audiodeteien erhalten!");
   }
+
+  const player = document.getElementById("ttsPlayer");
+  player.src = result.audio_data_url; // apply audio data
+  // TODO toggle autoplay
+  player.play().catch(() => { });
+
+  // update html
+  document.getElementById("tts-wrapper").classList.remove("processing");
+  document.getElementById("tts-wrapper").classList.add("success");
+  // append response times
+  let wrapper = buildResponseWrapper(result.responseTimes, " s");
+  document.getElementById("tts-text").appendChild(wrapper);
+  console.log(result.responseTimes);
+  return result;
 }
 
 /*****************************
@@ -280,54 +235,34 @@ async function startTTS() {
 async function startPipeline() {
   // Prepare run
   clearAll();
-  document.getElementById("tts-text").value = "";
+  document.getElementById("tts-input").value = "";
   document.getElementById("llm-question").value = "";
-  document.getElementById("final-success").classList.add("processing");
-  document.getElementById("loading").textContent = "(wird bearbeitet...)";
-  let times = [];
+  document.getElementById("final-wrapper").classList.add("processing");
+  let responseTimes = [];
+  let text = document.getElementById("final-text");
+  text.text = "(transkribiert...)";
+  responseTimes.push((await startSTT()).responseTimes);
+  text.text = "(wartet auf Anwort...)";
+  responseTimes.push((await startLLM()).responseTimes);
+  text.text = "(generiert Sprache...)";
+  responseTimes.push((await startTTS()).responseTimes);
 
-  // STT Step
-  document.getElementById("loading").textContent = "(wird transkribiert...";
-  let ms = await startSTT();
-  times.push(ms)
-  let transcription = document.getElementById("stt-text").textContent.trim();
-  document.getElementById("llm-question").value = transcription;
-
-  // LLM Step
-  document.getElementById("loading").textContent = "(warte auf Antwort...)";
-  ms = await startLLM();
-  times.push(ms);
-  let answer = document.getElementById("llm-text").textContent.trim();
-  document.getElementById("tts-text").value = answer;
-
-  // TTS Step
-  document.getElementById("loading").textContent = "(Audio wird generiert...)";
-  ms = await startTTS();
-  times.push(ms);
-
-  // Prepare Logs
-  let msTotal = 0;
-  times.forEach(element => {
-    msTotal += element.total
-  });
-  let msServerTotal = 0;
-  times.forEach(element => {
-    msServerTotal += element.server
-  });
-  let msNetworkTotal = 0;
-  times.forEach(element => {
-    msNetworkTotal += element.network
-  });
-  let finalMs = { server: msServerTotal, network: msNetworkTotal, total: msTotal };
-
+  let finalResponseTime = {server: 0, network: 0, total: 0};
+  for (const {server, network, total} of responseTimes) {
+    finalResponseTime.server = (parseFloat(finalResponseTime.server) + parseFloat(server)).toFixed(2);
+    finalResponseTime.network = (parseFloat(finalResponseTime.network) + parseFloat(network)).toFixed(2);
+    finalResponseTime.total = (parseFloat(finalResponseTime.total) + parseFloat(total)).toFixed(2);
+  }
+  console.log(finalResponseTime);
   // Final UI Update
-  document.getElementById("total-ms-server").textContent = "Bearbeitungszeit: " + finalMs.server + " ms";
-  document.getElementById("total-ms-network").textContent = "Netzwerklatenz: " + finalMs.network + " ms";
-  document.getElementById("total-ms-total").textContent = "Gesamt: " + finalMs.total + " ms";
-  document.getElementById("final-success").classList.remove("processing");
-  document.getElementById("final-success").classList.add("success");
-  // document.getElementById("loading").textContent = "Anfrage erfolgreich durchgeführt!";
-  document.getElementById("loading").textContent = window.llmAnswer;
+  document.getElementById("final-wrapper").classList.remove("processing");
+  document.getElementById("final-wrapper").classList.add("success");
+
+  document.getElementById("final-text").textContent = window.llmAnswer;
+
+  let wrapper = buildResponseWrapper(finalResponseTime, " s");
+  document.getElementById("final-text").appendChild(wrapper);
+
 }
 
 /*****************************
@@ -344,58 +279,37 @@ function clearConversation() {
 function clearSTT() {
   document.getElementById("stt-text").textContent = "(Sende eine Audio zum Transkribieren ein...)";
   document.getElementById("stt-text").value = "";
-  document.getElementById("stt-ms-server").textContent = "";
-  document.getElementById("stt-ms-network").textContent = "";
-  document.getElementById("stt-ms-total").textContent = "";
-  document.getElementById("stt-success").classList.remove("success");
-  document.getElementById("stt-success").classList.remove("processing");
+  document.getElementById("stt-wrapper").classList.remove("success");
+  document.getElementById("stt-wrapper").classList.remove("processing");
 }
 
 // clear LLM step
 function clearLLM() {
   document.getElementById("llm-text").textContent = "(Frage den Chatbot für eine Antwort!)";
-  document.getElementById("llm-ms-server").textContent = "";
-  document.getElementById("llm-ms-network").textContent = "";
-  document.getElementById("llm-ms-total").textContent = "";
-  document.getElementById("llm-success").classList.remove("success");
-  document.getElementById("llm-success").classList.remove("processing");
+  document.getElementById("llm-wrapper").classList.remove("success");
+  document.getElementById("llm-wrapper").classList.remove("processing");
 }
 
 // clear TTS step
 function clearTTS() {
-  document.getElementById("tts-text").textContent = "";
-  document.getElementById("tts-ms-server").textContent = "";
-  document.getElementById("tts-ms-network").textContent = "";
-  document.getElementById("tts-ms-total").textContent = "";
-  document.getElementById("tts-success").classList.remove("processing");
-  document.getElementById("tts-success").classList.remove("success");
+  document.getElementById("tts-text").textContent = "(Generierte Audio wird hier angezeigt und abgespielt...)";
+  document.getElementById("tts-text").value = "";
+  document.getElementById("tts-wrapper").classList.remove("processing");
+  document.getElementById("tts-wrapper").classList.remove("success");
 }
 
 function clearAll() {
   clearSTT();
   clearLLM();
   clearTTS();
-  document.getElementById("total-ms-server").textContent = "";
-  document.getElementById("total-ms-network").textContent = "";
-  document.getElementById("total-ms-total").textContent = "";
-  document.getElementById("final-success").classList.remove("processing");
-  document.getElementById("final-success").classList.remove("success");
-  document.getElementById("loading").textContent = "";
+  document.getElementById("final-wrapper").classList.remove("processing");
+  document.getElementById("final-wrapper").classList.remove("success");
+  // document.getElementById("loading").textContent = "(hier wird die Antwort stehen)";
 }
 
 /*************************************************************
  *  Utility Functions
  *************************************************************/
-
-/*****************************
- *  Get Response Times
- * - (server, network, total)
- *****************************/
-/*****************************
- *  Get Response Times
- * - (server, network, total)
- * - now handled by BeezlebugAPI.getResponseTime
- *****************************/
 
 /*****************************
  *  Wake Word Detection
@@ -407,6 +321,23 @@ function wakeWordDetected() {
   document.getElementById("push-to-talk-begin").disabled = false;
   document.getElementById("push-to-talk-begin").focus();
   document.getElementById("push-to-talk-begin").click();
+}
+
+/*****************************
+ *  Append responseTime Object as html-element
+ *****************************/
+function buildResponseWrapper(data, suffix = "") {
+  const wrapper = document.createElement("div");
+
+  if (data === null) return wrapper;
+
+  Object.entries(data).forEach(([key, value]) => {
+    const line = document.createElement("a");
+    line.textContent = key + ": " + value + suffix;
+    wrapper.appendChild(line);
+    wrapper.appendChild(document.createElement("br"));
+  })
+  return wrapper;
 }
 
 
@@ -421,9 +352,7 @@ function wakeWordDetected() {
 function updateAudioInputLabel() {
   const file = document.getElementById("file").files?.[0];
   if (!file) return;
-  if (file) {
-    document.getElementById("audio-player-label").innerText = "Datei: " + file.name;
-  }
+  document.getElementById("audio-player-label").innerText = "Datei: " + file.name;
   const url = URL.createObjectURL(file);
   document.getElementById("inputPlayer").src = url;
   document.getElementById("inputPlayer").load();
@@ -463,7 +392,6 @@ function updateVADThresholdDisplay() {
 function updateModelSelection(name) {
   wakewordController.loadWakeWordModel(name);
 }
-
 
 /*****************************
  *  Push to Talk Via Spacebar
