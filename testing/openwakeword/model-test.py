@@ -9,11 +9,12 @@ import tempfile, os
 openwakeword.utils.download_models()
 
 oww = Model(
-    # wakeword_models=["../../client/models/hey_rhasspy_v0.1.onnx"],
-    wakeword_models=["../../client/models/hey_twi_bot_v3.onnx"],
+    wakeword_models=["../../client/models/hey_rhasspy_v0.1.onnx"],
+    # wakeword_models=["../../client/models/hey_twi_bot_v3.onnx"],
     inference_framework="onnx"
 )
-src_path = "../../audios/wakeword/twi-bot/hey-twi-bot-16k.wav"
+# src_path = "../../audios/wakeword/twi-bot/hey-twi-bot-16k.wav"
+src_path = "../../audios/wakeword/rhasspy/elevenlabs-hey-rassphy-1-16k.wav"
 audio = AudioSegment.from_file(src_path)
 audio = audio.set_channels(1).set_frame_rate(16000).set_sample_width(2)  # 16bit PCM
 

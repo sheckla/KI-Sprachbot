@@ -17,9 +17,9 @@
 <body>
   <title>Twi-Bot KI-Pipeline Test</title>
   <div class="container">
-    <div>
+    <!-- <div>
       <img src="./img/logo.png" alt="twi-bot logo" class="logo">
-    </div>
+    </div> -->
 
     <!-- === Introduction === -->
     <div class="section">
@@ -48,16 +48,18 @@
             <!-- Push-To-Talk & WakeWord -->
             <button id="push-to-talk-begin" onclick="initPushToTalk()">Push-to-talk</button>
             <div id="ptt-info"></div>
-            <button id="start" onclick="listenForVoiceActivation()" disabled>Lauschen :)</button>
-            <button id="start-file" onclick="processAudioWithWakeWordDetection()" disabled>Audio einspielen!</button>
+            <button id="start" onclick="buttonListenForVoiceActivation()" disabled>Lauschen :)</button>
+            <button id="start-file" onclick="buttonProcessAudioForWakeWord()" disabled>Audio einspielen!</button>
             <select id="wake-word-model" onchange="updateModelSelection(this.value)">
+              <option value="./models/hey_twi_bot_v3.onnx">Hey Twi-Bot V3</option>
               <option value="./models/hey_rhasspy_v0.1.onnx">Hey Rasspy V0.1</option>
               <!-- <option value="./models/hey_twi_bot_v1.onnx">Hey Twi-Bot V1</option> -->
               <!-- <option value="./models/hey_twi_bot_v2.onnx">Hey Twi-Bot V2</option> -->
-              <option value="./models/hey_twi_bot_v3.onnx">Hey Twi-Bot V3</option>
             </select>
-            <label for="wakeword-threshold">WakeWord : <a id="wakeword-threshold-display"></a></label>
+            <label for="wakeword-threshold">WakeWord Sensibilität: <a id="wakeword-threshold-display"></a></label>
             <input type="range" id="wakeword-threshold" name="wakeword-threshold" min="0" max="1" step="0.025" value="0.5" oninput="updateWakeWordThresholdDisplay()">
+            <label for="vad-threshold">VAD Sensibilität: <a id="vad-threshold-display"></a></label>
+            <input type="range" id="vad-threshold" name="vad-threshold" min="0" max="1" step="0.025" value="0.5" oninput="updateVADThresholdDisplay()">
             <div id="status">Idle</div>
             <div id="volume"></div>
             <div id="score"></div>
@@ -67,6 +69,7 @@
             <input id="file" name="audio-input" class="input-file" type="file" accept="audio/*" oninput="updateAudioInputLabel()"/>
             <audio id="inputPlayer" controls></audio>
             <label id="audio-player-label" for="inputPlayer"></label>
+            <div id="feedback-light"></div>
           </td>
         </tr>
       </table>

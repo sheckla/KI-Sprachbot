@@ -5,6 +5,8 @@
  * inference every 0.08 sec => 1280 Samples per Chunk
  * min required samples = 16 * 1280 = 20480 (1.28 sec)
  *
+ * Sample -> Mel-Spectogram -> Embedding -> Wakeword -> Score
+ *
  * openWakeWord:
  * https://github.com/dscripka/openWakeWord
  *
@@ -17,11 +19,28 @@ class OpenWakeWordController {
     embeddingSession = null;
     wakewordSession = null;
     vadSession = null;
+    vadState = { h: null, c: null };
 
     melBuffer = [];
     embeddingBuffer = [];
 
-    constructor() { }
+    constructor() {
+        this.initBuffers();
+    }
+
+    initBuffers() {
+        for (let i = 0; i < 16; i++) {
+            this.embeddingBuffer.push(new Float32Array(96).fill(0));
+        }
+        const vadStateShape = [2, 1, 64];
+        if (!this.vadState.h) {
+            this.vadState.h = new ort.Tensor('float32', new Float32Array(128).fill(0), vadStateShape);
+            this.vadState.c = new ort.Tensor('float32', new Float32Array(128).fill(0), vadStateShape);
+        } else {
+            this.vadState.h.data.fill(0);
+            this.vadState.c.data.fill(0);
+        }
+    }
 
     async loadProcessingModels() {
         const sessionOptions = { executionProviders: ['wasm'] };
@@ -34,7 +53,7 @@ class OpenWakeWordController {
         this.vadSession = await ort.InferenceSession.create(vadModel, sessionOptions);
     }
 
-    async loadWakeWordModel(name = "./models/hey_rhasspy_v0.1.onnx") {
+    async loadWakeWordModel(name = "./models/hey_twi_bot_v3.onnx") {
         if (this.wakewordSession) this.wakewordSession = null;
         console.log("loading Wake-Word-model " + name);
         this.wakewordSession = await ort.InferenceSession.create(name);
@@ -91,7 +110,19 @@ class OpenWakeWordController {
         return { hit: highestScore >= threshold, scores, max: highestScore };
     }
 
-
+    async runVAD(chunk) {
+        try {
+            const tensor = new ort.Tensor('float32', chunk, [1, chunk.length]);
+            const sr = new ort.Tensor('int64', [BigInt(16000)], []);
+            const res = await this.vadSession.run({ input: tensor, sr: sr, h: this.vadState.h, c: this.vadState.c });
+            this.vadState.h = res.hn;
+            this.vadState.c = res.cn;
+            return res.output.data[0];
+        } catch (err) {
+            console.error("VAD error: ", err);
+            return false;
+        }
+    }
 
     // step 1: Mel-Spectogram + Buffer
     // 1280 frames!
@@ -112,35 +143,35 @@ class OpenWakeWordController {
             this.melBuffer.push(new Float32Array(melData.subarray(i * 32, (i + 1) * 32)));
         }
 
-        return this._maybeRunEmbedding();
+        return this.runEmbedding();
     }
 
-    async _maybeRunEmbedding() {
+    async runEmbedding() {
 
         if (this.melBuffer.length < 76) return null;
         // while (this.melBuffer.length < 76) {
         this.melBuffer.splice(0, 8); // Stride = 8 Frames (wie im Web-Repo)
 
-            const windowFrames = this.melBuffer.slice(0, 76);
-            // this.melBuffer.splice(0, 8); // Stride = 8 Frames (wie im Web-Repo)
-            const flatMel = new Float32Array(76 * 32);
-            for (let i = 0; i < windowFrames.length; i++) {
-                flatMel.set(windowFrames[i], i * 32);
-            }
+        const windowFrames = this.melBuffer.slice(0, 76);
+        // this.melBuffer.splice(0, 8); // Stride = 8 Frames (wie im Web-Repo)
+        const flatMel = new Float32Array(76 * 32);
+        for (let i = 0; i < windowFrames.length; i++) {
+            flatMel.set(windowFrames[i], i * 32);
+        }
 
-            const embIn = new ort.Tensor("float32", flatMel, [1, 76, 32, 1]);
-            const embOut = await this.embeddingSession.run({ [this.embeddingSession.inputNames[0]]: embIn });
-            const embedding = new Float32Array(embOut[this.embeddingSession.outputNames[0]].data);
+        const embIn = new ort.Tensor("float32", flatMel, [1, 76, 32, 1]);
+        const embOut = await this.embeddingSession.run({ [this.embeddingSession.inputNames[0]]: embIn });
+        const embedding = new Float32Array(embOut[this.embeddingSession.outputNames[0]].data);
 
-            // Embedding Buffer: exakt 16 behalten
-            if (this.embeddingBuffer.length >= 16) this.embeddingBuffer.shift();
-            this.embeddingBuffer.push(embedding);
+        // Embedding Buffer: exakt 16 behalten
+        if (this.embeddingBuffer.length >= 16) this.embeddingBuffer.shift();
+        this.embeddingBuffer.push(embedding);
 
-            return this._maybeRunWakeword();
+        return this.runWakeWord();
         // }
     }
 
-    async _maybeRunWakeword() {
+    async runWakeWord() {
         if (this.embeddingBuffer.length < 16) return null;
 
         const flatEmb = new Float32Array(16 * 96);

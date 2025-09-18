@@ -25,7 +25,8 @@ async function initPushToTalk() {
 
     // push recording into File-input-player
     const audioUrl = URL.createObjectURL(result.blob);
-    fileInputPlayer.src = audioUrl;
+
+    document.getElementById("inputPlayer").src = audioUrl;
 
     // when file ready => start pipeline
     window.onAudioReady?.(result.blob, audioUrl);

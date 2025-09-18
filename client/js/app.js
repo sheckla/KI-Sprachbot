@@ -1,7 +1,8 @@
 /*****************************
  * AI Voice Assistant
  * - program entry point
- * - manages most functions
+ * - manages Utility Programms
+ * - handles UI-Updates
  *  17.09.2025 Daniel Graf
  *****************************/
 // ===== Basic Variables =====
@@ -13,18 +14,25 @@ const fileInput = document.getElementById("file");
  *  Init Application
  *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
+  // initial UI update
   updateWakeWordThresholdDisplay();
+  updateVADThresholdDisplay();
   updateAudioInputLabel();
   updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
 
+  // disable some functions until ready
   document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
-  // await wakewordController.loadWakeWordModel(model);
+
+  // load OpenWakeWord
   await wakewordController.loadProcessingModels();
   console.log("WakeWordController ready");
+
+  // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
+  buttonListenForVoiceActivation();
 });
 
 /*****************************
@@ -32,93 +40,47 @@ document.addEventListener("DOMContentLoaded", async () => {
  * - AudioWorklet to chunk audio into 1280 samples (80ms @16kHz = 1240 samples)
  * - Sends chunks to WakeWordController for detection
  * - On detection, triggers Recorder.start()
+ * - todo port to different class
  *****************************/
-async function listenForVoiceActivation() {
-  console.log("VAD Listening...");
+async function buttonListenForVoiceActivation() {
+  await Recorder.loadWorklet();
 
-  // --- Setup WakeWordController ---
-  const wakeword = new OpenWakeWordController();
-  await wakeword.loadProcessingModels();
-  await wakeword.loadWakeWordModel("./models/hey_rhasspy_v0.1.onnx");
-
-  // --- Audio Context + Mic Input ---
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const audioContext = new AudioContext({ sampleRate: 16000 });
-  const source = audioContext.createMediaStreamSource(stream);
-
-  // --- Worklet Code for Chunking ---
-  const processorCode = `
-class MicProcessor extends AudioWorkletProcessor {
-  bufferSize = 1280; // 80ms bei 16kHz
-  _buffer = new Float32Array(this.bufferSize);
-  _pos = 0;
-
-  process(inputs) {
-    const input = inputs[0][0];
-    if (input) {
-      for (let i = 0; i < input.length; i++) {
-        this._buffer[this._pos++] = input[i];
-        if (this._pos === this.bufferSize) {
-          // --- Wakeword-Chunks raus ---
-          const chunk = this._buffer.slice(0);
-
-          // --- Lautstärke berechnen (RMS) ---
-          let sum = 0;
-          for (let j = 0; j < chunk.length; j++) {
-            sum += chunk[j] * chunk[j];
-          }
-          const rms = Math.sqrt(sum / chunk.length);
-          const db = 20 * Math.log10(rms + 1e-8); // in dB
-
-          // zurück an Main-Thread
-          this.port.postMessage({ chunk, rms, db });
-
-          this._pos = 0;
-        }
-      }
-    }
-    return true;
-  }
-}
-registerProcessor('mic-processor', MicProcessor);
-`;
-
-
-  // --- Load Worklet ---
-  const blob = new Blob([processorCode], { type: "application/javascript" });
-  const workletURL = URL.createObjectURL(blob);
-  await audioContext.audioWorklet.addModule(workletURL);
-  const workletNode = new AudioWorkletNode(audioContext, "mic-processor");
-
-  // --- Connect Mic to Worklet ---
-  source.connect(workletNode);
-
-  // --- Handle Chunks from Worklet ---
-  workletNode.port.onmessage = async (e) => {
-    const { chunk, rms, db } = e.data;
-
-    // Lautstärke ausgeben
-    document.getElementById("volume").innerText = "Volume: " + rms.toFixed(3) + " (RMS), " + db.toFixed(1) + " dB";
-
+  async function processAudioChunk({ chunk}) {
     // Wakeword-Erkennung
-    const score = await wakeword.processChunk(chunk);
+    const vadScore = await wakewordController.runVAD(chunk);
+    const vadFired = vadScore > (1.0 - document.getElementById("vad-threshold").value);
+    console.log("Vad fired: " + vadFired, vadScore.toFixed(3));
+    let light = document.getElementById("feedback-light");
+    if (vadFired) {
+      light.classList.add("push-to-talk-active");
+      light.innerText = "Voice detected!";
+    } else {
+      light.classList.remove("push-to-talk-active");
+      light.innerText = "-";
+    }
+    const score = await wakewordController.processChunk(chunk);
     if (score !== null) {
-      console.log("Wakeword score:", score.toFixed(3));
+      // console.log("Wakeword score:", score.toFixed(3));
       document.getElementById("score").innerText = "Wakeword Score: " + score.toFixed(3);
       if (score > 0.5) {
         console.log("✅ Wakeword erkannt!");
         document.getElementById("status").innerText = "Wakeword erkannt!";
-        Recorder.start(); // oder dein Push-to-Talk triggern
+        // timeout!
+        document.getElementById("push-to-talk-begin").click();
+        // Recorder.start(); // oder dein Push-to-Talk triggern
       }
     }
-  };
+  }
+
+  Recorder.setOnChunkCallback(processAudioChunk);
 }
+
 
 /*****************************
  *  Audio-File WakeWord Init
  * - Handles file input and runs WakeWord detection
  *****************************/
-async function processAudioWithWakeWordDetection() {
+async function buttonProcessAudioForWakeWord() {
   let threshold = parseFloat(document.getElementById("wakeword-threshold").value) || 0.5;
   let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
   console.log(result);
@@ -133,8 +95,6 @@ async function processAudioWithWakeWordDetection() {
     let maxScore = Math.max(...result.scores);
     document.getElementById("status").innerText = "Kein Wake word erkannt, Max Score: " + maxScore.toFixed(5);
   }
-
-
 }
 
 /*****************************
@@ -423,16 +383,6 @@ function clearAll() {
   document.getElementById("loading").textContent = "";
 }
 
-/*****************************
- *  Push to Talk Via Spacebar
- *****************************/
-document.getElementById("push-to-talk-begin").addEventListener("keydown", (event) => {
-  if (event.key === " " || event.key === "Spacebar") { // " " für moderne Browser, "Spacebar" für ältere
-    event.preventDefault();
-    initPushToTalk()
-  }
-});
-
 /*************************************************************
  *  Utility Functions
  *************************************************************/
@@ -441,17 +391,11 @@ document.getElementById("push-to-talk-begin").addEventListener("keydown", (event
  *  Get Response Times
  * - (server, network, total)
  *****************************/
-function getResponseTime(start, response) {
-  const msServer = response;
-  const msNetwork = Date.now() - start - msServer;
-  const msTotal = msServer + msNetwork;
-  const times = {
-    server: Math.round(msServer),
-    network: Math.round(msNetwork),
-    total: Math.round(msTotal)
-  };
-  return times;
-}
+/*****************************
+ *  Get Response Times
+ * - (server, network, total)
+ * - now handled by BeezlebugAPI.getResponseTime
+ *****************************/
 
 /*****************************
  *  Wake Word Detection
@@ -507,8 +451,28 @@ function updateWakeWordThresholdDisplay() {
 }
 
 /*****************************
+ *  VAD Threshold Slider
+ *****************************/
+function updateVADThresholdDisplay() {
+  const val = document.getElementById("vad-threshold").value;
+  document.getElementById("vad-threshold-display").innerText = val;
+}
+/*****************************
  *  Wake Workd Model Selection Update
  *****************************/
 function updateModelSelection(name) {
   wakewordController.loadWakeWordModel(name);
 }
+
+
+/*****************************
+ *  Push to Talk Via Spacebar
+ *****************************/
+document.getElementById("push-to-talk-begin").addEventListener("keydown", (event) => {
+  if (event.key === " " || event.key === "Spacebar") { // " " für moderne Browser, "Spacebar" für ältere
+    event.preventDefault();
+    initPushToTalk()
+  }
+});
+
+
