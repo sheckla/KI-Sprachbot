@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
-  updateMeter("vad", 0.9);
   // buttonListenForVoiceActivation();
 });
 
