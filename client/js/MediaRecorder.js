@@ -25,6 +25,7 @@ class Recorder {
             console.warn("Recorder already running");
             return;
         }
+        Recorder.isRecording = true;
 
         // permision prompt!
         Recorder.stream = await navigator.mediaDevices.getUserMedia(Recorder.settings);
@@ -41,7 +42,6 @@ class Recorder {
         })
 
         Recorder.mediaRecorder.start();
-        Recorder.isRecording = true;
         console.log("Recorder started:", mime);
     }
 
@@ -53,17 +53,20 @@ class Recorder {
                 return;
             }
 
-            Recorder.mediaRecorder.onstop = () => {
-                const blob = new Blob(Recorder.chunks, { type: Recorder.mediaRecorder.mimeType });
-                const file = new File([blob], "input.webm", { type: Recorder.mediaRecorder.mimeType });
+            if (Recorder.mediaRecorder) {
 
-                Recorder.clearStream();
-                Recorder.isRecording = false;
+                Recorder.mediaRecorder.onstop = () => {
+                    const blob = new Blob(Recorder.chunks, { type: Recorder.mediaRecorder.mimeType });
+                    const file = new File([blob], "input.webm", { type: Recorder.mediaRecorder.mimeType });
 
-                resolve({ blob, file });
-            };
+                    Recorder.clearStream();
+                    Recorder.isRecording = false;
 
-            Recorder.mediaRecorder.stop();
+                    resolve({ blob, file });
+                };
+
+                Recorder.mediaRecorder.stop();
+            }
         });
     }
 

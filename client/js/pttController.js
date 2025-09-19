@@ -14,28 +14,33 @@ let pttButton = document.getElementById('push-to-talk-begin')
 async function initPushToTalk() {
   // already recording -> stop recording
   if (Recorder.isRecording) {
-    const result = await Recorder.stop()
-    stopTimer();
-    pttButton.classList.remove('push-to-talk-active');
-
-    // push recording into file-input!
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(result.file);
-    fileInput.files = dataTransfer.files;
-
-    // push recording into File-input-player
-    const audioUrl = URL.createObjectURL(result.blob);
-
-    document.getElementById("inputPlayer").src = audioUrl;
-
-    // when file ready => start pipeline
-    window.onAudioReady?.(result.blob, audioUrl);
-    startPipeline();
-    return;
+    stopPushToTalk();
   }
   await Recorder.start();
   startTimer();
   pttButton.classList.add('push-to-talk-active');
+  return;
+}
+
+
+async function stopPushToTalk() {
+  const result = await Recorder.stop()
+  stopTimer();
+  pttButton.classList.remove('push-to-talk-active');
+
+  // push recording into file-input!
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(result.file);
+  fileInput.files = dataTransfer.files;
+
+  // push recording into File-input-player
+  const audioUrl = URL.createObjectURL(result.blob);
+
+  document.getElementById("inputPlayer").src = audioUrl;
+
+  // when file ready => start pipeline
+  window.onAudioReady?.(result.blob, audioUrl);
+  startPipeline();
   return;
 }
 

@@ -9,20 +9,68 @@
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
 const fileInput = document.getElementById("file");
+const PUSH_TO_TALK_COOLDOWN_MS = 3000;
+const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
+let readyToListen = true;
+const $ = (id) => document.getElementById(id);
+
+
+class SilenceDetector {
+  constructor(silenceDurationMs = 1000, threshold = 0.3) {
+    this.silenceDurationMs = silenceDurationMs;
+    this.frameDurationMs = 80;
+    this.threshold = threshold;
+    this.buffer = [];
+    this.maxFrames = parseInt(this.silenceDurationMs / this.frameDurationMs);
+  }
+
+  addValue(score) {
+    this.buffer.push(score);
+    if (this.buffer.length > this.maxFrames) {
+      this.buffer.shift();
+    }
+  }
+
+  // TODO mit avg arbeiten weil wenn 1 frame nicht passt => non-fire
+  isSilent() {
+    // console.log(this.buffer.length + " " + this.maxFrames)
+    if (this.buffer.length < this.maxFrames) {
+    return false;
+    }
+    console.log(this.getAvg() +  "<" +  this.threshold + "=" + (this.getAvg() < this.threshold))
+    return this.getAvg() < this.threshold;
+    // return this.bWuffer.every(value => value < this.threshold);
+  }
+
+  getAvg() {
+    let val = 0;
+    this.buffer.forEach(score => {
+      val += score;
+    })
+    val /= this.buffer.length;
+    return val;
+  }
+}
+
+const silenceDetector = new SilenceDetector(5500, 0.0);
+
+
 
 /*************************************************************
  *  Init Application
  *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
+  $("final-text").innerText = "Hallo";
   // initial UI update
-  updateWakeWordThresholdDisplay();
-  updateVADThresholdDisplay();
+  updateThresholdSlider($("speech-timeout-threshold"));
+  updateThresholdSlider($("vad-threshold"));
+  updateThresholdSlider($("wakeword-threshold"));
   updateAudioInputLabel();
   updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
 
   // disable some functions until ready
-  document.getElementById("start").disabled = true;
+  // document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
 
   // load OpenWakeWord
@@ -30,9 +78,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("WakeWordController ready");
 
   // enable functions
-  document.getElementById("start").disabled = false;
+  // document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
-  // buttonListenForVoiceActivation();
+  buttonListenForVoiceActivation();
 });
 
 /*****************************
@@ -46,34 +94,39 @@ async function buttonListenForVoiceActivation() {
   await Recorder.loadWorklet();
 
   async function processAudioChunk({ chunk }) {
-    // Wakeword-Erkennung
+    // update meters
     const vadScore = await wakewordController.runVAD(chunk);
-    updateMeter("vad", vadScore);
-    const vadFired = vadScore > (1.0 - document.getElementById("vad-threshold").value);
-    // console.log("Vad fired: " + vadFired, vadScore.toFixed(3));
-    let light = document.getElementById("feedback-light");
-    if (vadFired) {
-      light.classList.add("push-to-talk-active");
-      light.innerText = "Voice detected!";
-    } else {
-      light.classList.remove("push-to-talk-active");
-      light.innerText = "-";
+    const vadThreshold = $("vad-threshold").value;
+    const wakewordScore = await wakewordController.processChunk(chunk);
+    const wakewordThreshold = $("wakeword-threshold").value;
+    silenceDetector.addValue(vadScore);
+    silenceDetector.threshold = $("speech-timeout-threshold").value;
+    updateMeter("vad", vadScore, $("vad-threshold").value);
+    updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
+    updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
+
+
+    if (Recorder.isRecording) {
+      if (wakewordCooldown.isExpired() ) {
+        console.log(silenceDetector.getAvg().toFixed(3))
+        if (silenceDetector.isSilent()) {
+          console.log("Es war silent!");
+          await stopPushToTalk();
+          readyToListen = true;
+        }
+      }
+
     }
-    const score = await wakewordController.processChunk(chunk);
-    updateMeter("wakeword", score);
-    if (score !== null) {
-      // console.log("Wakeword score:", score.toFixed(3));
-      // document.getElementById("score").innerText = "Wakeword Score: " + score.toFixed(3);
-      if (score > document.getElementById("wakeword-threshold").value) {
-        console.log("✅ Wakeword erkannt!");
-        document.getElementById("status").innerText = "Wakeword erkannt!";
-        // timeout!
-        document.getElementById("push-to-talk-begin").click();
-        // Recorder.start(); // oder dein Push-to-Talk triggern
+
+    if (readyToListen && wakewordScore !== null && wakewordScore >= wakewordThreshold) {
+      if (!Recorder.isRecording) {
+        await initPushToTalk();
+        Recorder.isRecording = true;
+        wakewordCooldown.start(); // Cooldown läuft ab jetzt
+        readyToListen = false;
       }
     }
   }
-
   Recorder.setOnChunkCallback(processAudioChunk);
 }
 
@@ -249,8 +302,8 @@ async function startPipeline() {
   text.text = "(generiert Sprache...)";
   responseTimes.push((await startTTS()).responseTimes);
 
-  let finalResponseTime = {server: 0, network: 0, total: 0};
-  for (const {server, network, total} of responseTimes) {
+  let finalResponseTime = { server: 0, network: 0, total: 0 };
+  for (const { server, network, total } of responseTimes) {
     finalResponseTime.server = (parseFloat(finalResponseTime.server) + parseFloat(server)).toFixed(2);
     finalResponseTime.network = (parseFloat(finalResponseTime.network) + parseFloat(network)).toFixed(2);
     finalResponseTime.total = (parseFloat(finalResponseTime.total) + parseFloat(total)).toFixed(2);
@@ -373,21 +426,12 @@ function updateTTSOptions() {
   }
 }
 
-/*****************************
- *  WakeWord Threshold Slider
- *****************************/
-function updateWakeWordThresholdDisplay() {
-  const val = document.getElementById("wakeword-threshold").value;
-  document.getElementById("wakeword-threshold-display").innerText = val;
+function updateThresholdSlider(input) {
+  const label = $(input.id + "-display");
+  label.textContent = input.value;
 }
 
-/*****************************
- *  VAD Threshold Slider
- *****************************/
-function updateVADThresholdDisplay() {
-  const val = document.getElementById("vad-threshold").value;
-  document.getElementById("vad-threshold-display").innerText = val;
-}
+
 /*****************************
  *  Wake Workd Model Selection Update
  *****************************/
@@ -395,7 +439,8 @@ function updateModelSelection(name) {
   wakewordController.loadWakeWordModel(name);
 }
 
-function updateMeter(id, value) {
+function updateMeter(id, value, activateAt = 0.5) {
+  const wrapper = document.getElementById(id + "-meter-wrapper");
   const meter = document.getElementById(id + "-meter");
   const label = document.getElementById(id + "-meter-value");
 
@@ -403,6 +448,13 @@ function updateMeter(id, value) {
   const clamped = Math.max(0, Math.min(1, value));
   meter.style.width = (clamped * 100) + "%";
   label.textContent = clamped.toFixed(2);
+
+  if (value >= activateAt) {
+    wrapper.classList.toggle("meter-active", true);
+  } else {
+    wrapper.classList.toggle("meter-active", false);
+  }
+
 }
 
 
