@@ -93,8 +93,8 @@ class Recorder {
         // --- Audio Context + Mic Input ---
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         // TODO: only works for chrome now, firefox doesn't allow 16kHz sampling
-        const audioContext = new AudioContext({ sampleRate: 16000 });
-        // const audioContext = new AudioContext();
+        //const audioContext = new AudioContext({ sampleRate: 16000 });
+        const audioContext = new AudioContext();
         const source = audioContext.createMediaStreamSource(stream);
 
 
