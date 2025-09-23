@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateModelSelection(document.getElementById("wake-word-model").value);
 
   // disable some functions until ready
-  // document.getElementById("start").disabled = true;
+  document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
 
   // load OpenWakeWord
@@ -43,9 +43,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("WakeWordController ready");
 
   // enable functions
-  // document.getElementById("start").disabled = false;
+  document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
-  buttonListenForVoiceActivation();
+  // buttonListenForVoiceActivation();
 });
 
 /*****************************
