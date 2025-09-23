@@ -15,42 +15,6 @@ let readyToListen = true;
 const $ = (id) => document.getElementById(id);
 
 
-class SilenceDetector {
-  constructor(silenceDurationMs = 1000, threshold = 0.3) {
-    this.silenceDurationMs = silenceDurationMs;
-    this.frameDurationMs = 80;
-    this.threshold = threshold;
-    this.buffer = [];
-    this.maxFrames = parseInt(this.silenceDurationMs / this.frameDurationMs);
-  }
-
-  addValue(score) {
-    this.buffer.push(score);
-    if (this.buffer.length > this.maxFrames) {
-      this.buffer.shift();
-    }
-  }
-
-  // TODO mit avg arbeiten weil wenn 1 frame nicht passt => non-fire
-  isSilent() {
-    // console.log(this.buffer.length + " " + this.maxFrames)
-    if (this.buffer.length < this.maxFrames) {
-    return false;
-    }
-    console.log(this.getAvg() +  "<" +  this.threshold + "=" + (this.getAvg() < this.threshold))
-    return this.getAvg() < this.threshold;
-    // return this.bWuffer.every(value => value < this.threshold);
-  }
-
-  getAvg() {
-    let val = 0;
-    this.buffer.forEach(score => {
-      val += score;
-    })
-    val /= this.buffer.length;
-    return val;
-  }
-}
 
 const silenceDetector = new SilenceDetector(5500, 0.0);
 
@@ -60,11 +24,12 @@ const silenceDetector = new SilenceDetector(5500, 0.0);
  *  Init Application
  *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
-  $("final-text").innerText = "Hallo";
+  // $("final-text").innerText = "Hallo";
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));
   updateThresholdSlider($("vad-threshold"));
   updateThresholdSlider($("wakeword-threshold"));
+  updateThresholdSlider($("tts-speed"));
   updateAudioInputLabel();
   updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
@@ -107,7 +72,7 @@ async function buttonListenForVoiceActivation() {
 
 
     if (Recorder.isRecording) {
-      if (wakewordCooldown.isExpired() ) {
+      if (wakewordCooldown.isExpired()) {
         console.log(silenceDetector.getAvg().toFixed(3))
         if (silenceDetector.isSilent()) {
           console.log("Es war silent!");
@@ -259,11 +224,12 @@ async function startTTS() {
 
   let selectedEmotion = document.getElementById("thorsten-emotion").value;
   let selectedSpeed = document.getElementById("tts-speed").value;
+  let selectedSpeaker = document.getElementById("tts-speaker").value;
 
   // ui -> processing
   clearTTS();
   document.getElementById("tts-wrapper").classList.add("processing");
-  const result = await pipelineController.generateTextToSpeech(text, selectedTypeTTS, selectedEmotion, selectedSpeed)
+  const result = await pipelineController.generateTextToSpeech(text, selectedTypeTTS, selectedEmotion, selectedSpeed, selectedSpeaker)
   if (!result.audio_data_url) {
     return alert("Keine Audiodeteien erhalten!");
   }
@@ -419,10 +385,22 @@ function updateAudioInputLabel() {
  *****************************/
 function updateTTSOptions() {
   selectedTypeTTS = document.getElementById("tts-type").value;
-  if (selectedTypeTTS === "coqui") {
-    document.getElementById("piper-options").classList.add("hidden");
-  } else {
-    document.getElementById("piper-options").classList.remove("hidden");
+
+  document.getElementById("piper-options").classList.add("hidden");
+  document.getElementById("xtts-options").classList.add("hidden");
+  document.getElementById("speed-options").classList.add("hidden");
+  // quick and dirty
+  switch (selectedTypeTTS) {
+    case "coqui-thorsten":
+      break;
+      case "coqui-xtts":
+        document.getElementById("xtts-options").classList.remove("hidden");
+        document.getElementById("speed-options").classList.remove("hidden");
+        break;
+        case "piper":
+          document.getElementById("piper-options").classList.remove("hidden");
+          document.getElementById("speed-options").classList.remove("hidden");
+      break;
   }
 }
 
@@ -430,7 +408,6 @@ function updateThresholdSlider(input) {
   const label = $(input.id + "-display");
   label.textContent = input.value;
 }
-
 
 /*****************************
  *  Wake Workd Model Selection Update
@@ -456,7 +433,6 @@ function updateMeter(id, value, activateAt = 0.5) {
   }
 
 }
-
 
 /*****************************
  *  Push to Talk Via Spacebar

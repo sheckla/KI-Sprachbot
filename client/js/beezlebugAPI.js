@@ -76,14 +76,30 @@ class BeezlebugAPI {
     return JSON.parse(responseText);
   }
 
-    /*****************************
-   * Text-To-Speech POST for Coqui
-   * - text: Text to be converted to speech
-   *****************************/
-  async tts_POST_coqui(text) {
+  /*****************************
+ * Text-To-Speech POST for Coqui
+ * - text: Text to be converted to speech
+ *****************************/
+  async tts_POST_coqui_thorsten(text) {
     const formData = new FormData();
     formData.append("text", text);
     const url = this.apiUrl + "/server/tts-coqui-hot.php";
+    const response = await fetch(url, { method: "POST", body: formData });
+    const responseText = await response.text();
+    return JSON.parse(responseText);
+  }
+
+  /*****************************
+ * Text-To-Speech POST for Coqui
+ * - text: Text to be converted to speech
+ *****************************/
+  async tts_POST_coqui_xtts(text, speaker, speed) {
+    const formData = new FormData();
+    formData.append("text", text);
+    formData.append("speaker", speaker);
+    formData.append("speed", speed);
+    formData.append("language_id", "de");
+    const url = this.apiUrl + "/server/tts-xttsv2.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);

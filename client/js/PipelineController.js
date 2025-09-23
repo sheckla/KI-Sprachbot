@@ -80,14 +80,16 @@ class PipelineController {
         }
     }
 
-    async generateTextToSpeech(text, type = "coqui", emotion = 4, speed = 1.0) {
+    async generateTextToSpeech(text, type = "coqui", emotion = 4, speed = 1.0, speaker = "Tammie Ema") {
         let t1 = Date.now();
         try {
             let response;
-            if (type === "coqui") {
-                response = await this.beezlebugAPI.tts_POST_coqui(text);
-            } else {
+            if (type === "coqui-thorsten") {
+                response = await this.beezlebugAPI.tts_POST_coqui_thorsten(text);
+            } else if (type === "piper") {
                 response = await this.beezlebugAPI.tts_POST_piper(text, emotion, speed);
+            } else {
+                response = await this.beezlebugAPI.tts_POST_coqui_xtts(text, speaker, speed)
             }
             let responseTimes = this.getResponseTime(t1, response.ms);
             let answer = {
