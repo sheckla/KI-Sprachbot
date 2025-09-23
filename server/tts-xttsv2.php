@@ -1,33 +1,27 @@
 <?php
-/* HTTP Proxy für Coqui-TTS API
- *
- * created by: Daniel Graf
- * updated: 23.09.25
- */
-
 declare(strict_types=1);
 require __DIR__ . "/util/util.php";
 
 header("Content-Type: application/json; charset=utf-8");
 CorsConfig::allowAll();
-
-$timer = new TimerMs();
-$timer->start();
+$timer = new TimerMs(); $timer->start();
 
 // ===== Input =====
-$text   = $_POST["text"]   ?? "";
-$speed  = $_POST["speed"]  ?? 1.0;
+$text    = $_POST["text"]    ?? "";
+$speed   = (float)($_POST["speed"] ?? 1.0);
 $speaker = $_POST["speaker"] ?? "Tammie Ema";
+$language = $_POST["language_id"] ?? "";
 
 if ($text === "") {
   Response::fail(400, "No text input.");
 }
 
-// ===== Request an lokalen Coqui-Server =====
+// ===== Request an lokalen Coqui XTTSv2 Server =====
 $payload = json_encode([
-  "input" => $text,
-  "voice" => $speaker,
-  "speed" => (float)$speed
+  "input"  => $text,
+  "voice"  => $speaker,
+  "speed"  => $speed,
+  "language_id" => $lang
 ], JSON_UNESCAPED_UNICODE);
 
 $ch = curl_init("http://127.0.0.1:5002/v1/audio/speech");
@@ -39,7 +33,7 @@ curl_setopt_array($ch, [
     "Accept: audio/wav"
   ],
   CURLOPT_POSTFIELDS     => $payload,
-  CURLOPT_TIMEOUT        => 30
+  CURLOPT_TIMEOUT        => 60,
 ]);
 
 $res  = curl_exec($ch);
@@ -51,18 +45,19 @@ if ($res === false || $http !== 200) {
   Response::fail(502, "coqui http failed", [
     "curl_error" => $err,
     "http"       => $http,
-    "response"   => $res
+    "response"   => $res,
   ]);
 }
 
-// ===== Rückgabe =====
+// ===== Base64 codieren & zurückgeben =====
 $audioBase64 = base64_encode($res);
 
 Response::success([
-  "ok"      => true,
-  "audio"   => $audioBase64,
-  "mime"    => "audio/wav",
-  "ms"      => $timer->getMs(),
-  "speaker" => $speaker,
-  "speed"   => (float)$speed
+  "ok"             => true,
+  "format"         => "wav",
+  "audio_data_url" => "data:audio/wav;base64," . $audioBase64,
+  "size_bytes"     => strlen($res),
+  "ms"             => $timer->getMs(),
+  "speaker"        => $speaker,
+  "speed"          => $speed,
 ]);
