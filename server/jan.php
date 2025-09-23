@@ -52,7 +52,7 @@ $selectedModel = "Llama-3_2-3B-Instruct-IQ4_XS"; // Obwohl geht
 //$selectedModel = "mistralai_Voxtral-Mini-3B-2507-IQ4_XS";
 $selectedModel = "gemma-3-12b-it-IQ4_XS";
 $selectedModel = "gemma-3-1b-it-IQ4_XS"; // aktueller favorit nach Recherche und Testing
-$selectedModel = "gemma-3-4b-it-IQ4_XS";
+//$selectedModel = "gemma-3-4b-it-IQ4_XS";
 
 //$selectedModel = "DeepSeek-R1-Distill-Qwen-1_5B-Q4_K_M";
 //$selectedModel = "openai_gpt-oss-20b-IQ4_XS";

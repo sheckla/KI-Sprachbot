@@ -15,7 +15,7 @@ $language = $_POST["language_id"] ?? "";
 if ($text === "") {
   Response::fail(400, "No text input.");
 }
-
+$text = preg_replace("/[.,!?;:]/u", "\n", $text);
 // ===== Request an lokalen Coqui XTTSv2 Server =====
 $payload = json_encode([
   "input"  => $text,
