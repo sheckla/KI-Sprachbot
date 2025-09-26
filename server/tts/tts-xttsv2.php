@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . "/util/util.php";
+require __DIR__ . "../../util/util.php";
 
 header("Content-Type: application/json; charset=utf-8");
 CorsConfig::allowAll();

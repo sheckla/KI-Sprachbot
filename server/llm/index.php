@@ -5,7 +5,7 @@
 * Doc last updated: 15.09.25
 */
 declare(stript_types=1);
-require __DIR__ . "/util/util.php";
+require __DIR__ . "../../util/util.php";
 // ===== CORS =====
 CorsConfig::allowAll();
 $timer = new TimerMs();
