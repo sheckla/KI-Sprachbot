@@ -20,7 +20,7 @@ class BeezlebugAPI {
     const formData = new FormData();
     formData.append("file", file, file.name);
     formData.append("quality", quality);
-    const url = this.apiUrl + "/server/stt.php";
+    const url = this.apiUrl + "/server/stt/";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
@@ -29,7 +29,7 @@ class BeezlebugAPI {
   async stt_emotion_POST(file) {
     const formData = new FormData();
     formData.append("file", file, file.name);
-    const url = this.apiUrl + "/server/stt-emotion.php";
+    const url = this.apiUrl + "/server/stt/stt-emotion.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
@@ -48,7 +48,7 @@ class BeezlebugAPI {
       formData.append("conversation", this.conversationId);
     }
 
-    const url = this.apiUrl + "/server/llm.php";
+    const url = this.apiUrl + "/server/llm/";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     let json = JSON.parse(responseText);
@@ -70,7 +70,7 @@ class BeezlebugAPI {
     formData.append("emotion", emotion || "4");
     formData.append("speed", speed);
     formData.append("text", text);
-    const url = this.apiUrl + "/server/tts-piper.php";
+    const url = this.apiUrl + "/server/tts/tts-piper.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
@@ -83,7 +83,7 @@ class BeezlebugAPI {
   async tts_POST_coqui_thorsten(text) {
     const formData = new FormData();
     formData.append("text", text);
-    const url = this.apiUrl + "/server/tts-coqui-hot.php";
+    const url = this.apiUrl + "/server/tts/tts-coqui-hot.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
@@ -99,7 +99,7 @@ class BeezlebugAPI {
     formData.append("speaker", speaker);
     formData.append("speed", speed);
     formData.append("language_id", "de");
-    const url = this.apiUrl + "/server/tts-xttsv2.php";
+    const url = this.apiUrl + "/server/tts/tts-xttsv2.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
