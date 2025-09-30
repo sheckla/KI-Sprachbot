@@ -70,7 +70,7 @@ class BeezlebugAPI {
     formData.append("emotion", emotion || "4");
     formData.append("speed", speed);
     formData.append("text", text);
-    const url = this.apiUrl + "/server/tts/tts-piper.php";
+    const url = this.apiUrl + "/server/tts/piper.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
@@ -83,7 +83,7 @@ class BeezlebugAPI {
   async tts_POST_coqui_thorsten(text) {
     const formData = new FormData();
     formData.append("text", text);
-    const url = this.apiUrl + "/server/tts/tts-coqui-hot.php";
+    const url = this.apiUrl + "/server/tts/coqui-thorsten-runtime.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
@@ -99,7 +99,7 @@ class BeezlebugAPI {
     formData.append("speaker", speaker);
     formData.append("speed", speed);
     formData.append("language_id", "de");
-    const url = this.apiUrl + "/server/tts/tts-xttsv2.php";
+    const url = this.apiUrl + "/server/tts/coqui-xttsv2.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);
