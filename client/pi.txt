@@ -1,0 +1,56 @@
+// ===== Speaker/Lautsprecher Tests =====
+// Aufnahme testen
+arecord -l
+arecord -D plughw:1,0 -f cd -t wav -d 5 test.wav
+
+// Wiedergabe testen
+aplay -l
+aplay -D plughw:1,0 /usr/share/sounds/alsa/Front_Center.wav
+
+
+// ===== Autostart Skript! =====
+// chmod +x start.sh
+// ./start.sh
+// Ordner anlegen, fallst nicht da: mkdir -p ~/.config/autostart
+// nano ~/.config/autostart/start.desktop
+[Desktop Entry]
+Type=Application
+Exec=/home/cybob/start.sh
+Hidden=false
+X-GNOME-Autostart-enabled=true
+Name=Start Script
+
+
+// ===== start.sh =====
+#!/bin/bash
+
+# # 1. WLAN verbinden (SSID & Passwort festlegen)
+# SSID="DeineSSID"
+# PASSWORD="DeinPasswort"
+
+# sudo tee /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null <<EOL
+# ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+# update_config=1
+# country=DE
+
+# network={
+#     ssid="$SSID"
+#     psk="$PASSWORD"
+# }
+# EOL
+
+# sudo wpa_cli -i wlan0 reconfigure
+
+# 2. Firefox starten und auf URL gehen
+URL="http://url"
+# Falls Firefox schon läuft, killen
+pkill firefox
+# Firefox mit Autostart-Option starten
+firefox --kiosk "$URL" &
+
+# 3. Mikrofon dauerhaft erlauben
+PROFILE=$(ls -d ~/.mozilla/firefox/*.default-release | head -n 1)
+if [ -d "$PROFILE" ]; then
+  echo 'user_pref("permissions.default.microphone", 1);' >> "$PROFILE/user.js"
+  echo 'user_pref("media.navigator.permission.disabled", true);' >> "$PROFILE/user.js"
+fi
