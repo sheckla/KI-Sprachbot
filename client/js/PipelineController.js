@@ -89,7 +89,7 @@ export class PipelineController {
             if (type === "coqui-thorsten") {
                 response = await this.beezlebugAPI.tts_POST_coqui_thorsten(text);
             } else if (type === "piper") {
-                response = await this.beezlebugAPI.tts_POST_piper(text, emotion, speed);
+                response = await this.beezlebugAPI.tts_POST_piper(text, emotion, 2.01 - speed);
             } else {
                 response = await this.beezlebugAPI.tts_POST_coqui_xtts(text, speaker, speed)
             }

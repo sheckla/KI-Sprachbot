@@ -9,6 +9,7 @@ import { OpenWakeWordController } from "./OpenWakeWordController.js";
 import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Cooldown } from "./Cooldown.js";
+import { Recorder} from "./MediaRecorder.js";
 
 // ===== Basic Variables =====
 const pipelineController = new PipelineController();
@@ -17,26 +18,20 @@ const fileInput = document.getElementById("file");
 const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
 let readyToListen = true;
-const $ = (id) => document.getElementById(id);
-
-
-
 const silenceDetector = new SilenceDetector(5500, 0.0);
-
-
+const $ = (id) => document.getElementById(id);
 
 /*************************************************************
  *  Init Application
  *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
-  // $("final-text").innerText = "Hallo";
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));
   updateThresholdSlider($("vad-threshold"));
   updateThresholdSlider($("wakeword-threshold"));
   updateThresholdSlider($("tts-speed"));
   updateAudioInputLabel();
-  // updateTTSOptions();
+  updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
 
   // disable some functions until ready
@@ -50,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
-  // buttonListenForVoiceActivation();
+  buttonListenForVoiceActivation();
 });
 
 /*****************************
@@ -74,7 +69,7 @@ async function buttonListenForVoiceActivation() {
     updateMeter("vad", vadScore, $("vad-threshold").value);
     updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
     updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
-
+    console.log("updating");
 
     if (Recorder.isRecording) {
       if (wakewordCooldown.isExpired()) {
@@ -230,6 +225,7 @@ async function startTTS() {
   let selectedEmotion = document.getElementById("thorsten-emotion").value;
   let selectedSpeed = document.getElementById("tts-speed").value;
   let selectedSpeaker = document.getElementById("tts-speaker").value;
+  let selectedTypeTTS = document.getElementById("tts-type").value;
 
   // ui -> processing
   clearTTS();
@@ -389,7 +385,7 @@ function updateAudioInputLabel() {
  * - show advanced Options for Piper
  *****************************/
 function updateTTSOptions() {
-  selectedTypeTTS = document.getElementById("tts-type").value;
+  let selectedTypeTTS = document.getElementById("tts-type").value;
 
   document.getElementById("piper-options").classList.add("hidden");
   document.getElementById("xtts-options").classList.add("hidden");
@@ -449,4 +445,17 @@ document.getElementById("push-to-talk-begin").addEventListener("keydown", (event
   }
 });
 
+// app.js (am Ende oder nach Funktionsdefinitionen)
+window.startTTS = startTTS;
+window.startSTT = startSTT;
+window.startEmotionSTT = startEmotionSTT;
+window.startLLM = startLLM;
+window.startPipeline = startPipeline;
+window.buttonListenForVoiceActivation = buttonListenForVoiceActivation;
+window.buttonProcessAudioForWakeWord = buttonProcessAudioForWakeWord;
+window.updateModelSelection = updateModelSelection;
+window.updateThresholdSlider = updateThresholdSlider;
+window.updateTTSOptions = updateTTSOptions;
+window.clearAll = clearAll;
+window.clearConversation = clearConversation;
 
