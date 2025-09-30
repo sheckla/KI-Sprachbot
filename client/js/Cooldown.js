@@ -1,4 +1,4 @@
-class Cooldown {
+export class Cooldown {
   constructor(timeoutMs = 1000) {
     this.duration = timeoutMs;
     this.timeStart = null;

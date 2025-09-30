@@ -5,7 +5,7 @@
  *  17.09.2025 Daniel Graf
 *****************************/
 const API_URL = "https://one.beezlebug.com/ki-sprachbot";
-class BeezlebugAPI {
+export class BeezlebugAPI {
   conversationId = "";
 
   constructor(apiUrl) {

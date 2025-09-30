@@ -177,7 +177,7 @@
           <label for="tts-type">TTS Engine</label>
 
 
-          <select id="tts-type" oninput="updateTTSOptions()">
+          <select id="tts-type" oninput="updateTTSOptions()" value="coqui-xtts">
             <option value="coqui-xtts">Coqui TTS (XTTS v2) </option>
             <option value="coqui-thorsten">Coqui TTS (Thorsten)</option>
             <option value="piper">Piper TTS</option>
@@ -287,14 +287,15 @@
   <!-- SCRIPTS -->
   <!-- ===================================================== -->
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
-  <script src="./js/SilenceDetector.js"></script>
-  <script src="./js/Cooldown.js"></script>
-  <script src="./js/beezlebugAPI.js"></script>
-  <script src="./js/MediaRecorder.js"></script>
-  <script src="./js/pttController.js"></script>
-  <script src="./js/OpenWakeWordController.js"></script>
-  <script src="./js/PipelineController.js"></script>
-  <script src="./js/app.js"></script>
+  <!-- <script src="./js/SilenceDetector.js"></script> -->
+  <!-- <script src="./js/Cooldown.js"></script> -->
+  <!-- <script src="./js/beezlebugAPI.js"></script> -->
+  <!-- <script src="./js/MediaRecorder.js"></script> -->
+  <!-- <script src="./js/pttController.js"></script> -->
+  <!-- <script type="module" src="./js/OpenWakeWordController.js"></script> -->
+  <!-- <script src="./js/PipelineController.js"></script> -->
+  <script type="module" src="./js/app.js"></script>
+
 </body>
 
 </html>

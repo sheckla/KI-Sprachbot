@@ -5,6 +5,11 @@
  * - handles UI-Updates
  *  17.09.2025 Daniel Graf
  *****************************/
+import { OpenWakeWordController } from "./OpenWakeWordController.js";
+import { PipelineController } from "./PipelineController.js";
+import { SilenceDetector } from "./SilenceDetector.js";
+import { Cooldown } from "./Cooldown.js";
+
 // ===== Basic Variables =====
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
@@ -31,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateThresholdSlider($("wakeword-threshold"));
   updateThresholdSlider($("tts-speed"));
   updateAudioInputLabel();
-  updateTTSOptions();
+  // updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
 
   // disable some functions until ready

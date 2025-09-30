@@ -1,4 +1,4 @@
-class SilenceDetector {
+export class SilenceDetector {
   constructor(silenceDurationMs = 1000, threshold = 0.3) {
     this.silenceDurationMs = silenceDurationMs;
     this.frameDurationMs = 80;

@@ -1,3 +1,5 @@
+import { BeezlebugAPI } from "./BeezlebugAPI.js";
+
 /*****************************
  * AI-Pipeline Controller
  * - controls main stepf
@@ -9,7 +11,7 @@
  * - API Interaction handled via BeezlebugAPI
  *  18.09.2025 Daniel Graf
  *****************************/
-class PipelineController {
+export class PipelineController {
     beezlebugAPI = new BeezlebugAPI();
 
     async speechToText(file, quality) {

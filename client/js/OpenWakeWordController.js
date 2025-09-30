@@ -14,7 +14,7 @@
  * https://deepcorelabs.com/open-wake-word-on-the-web/
 *************************************************************/
 const FRAME_SIZE = 1280;
-class OpenWakeWordController {
+export class OpenWakeWordController {
     melspectogramSession = null;
     embeddingSession = null;
     wakewordSession = null;
