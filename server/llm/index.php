@@ -5,6 +5,7 @@
 * Doc last updated: 15.09.25
 */
 declare(stript_types=1);
+header("Content-Type: application/json; charset=utf-8");
 require __DIR__ . "../../util/util.php";
 // ===== CORS =====
 CorsConfig::allowAll();
@@ -58,6 +59,6 @@ $decoded = json_decode($res, true);
 
 Response::success([
     "ms" => $timer->getMs(),
-    "reply" => $decoded["reply"],
+    "reply" => strip_tags($decoded["reply"]),
     "conversation" => $decoded["conversation"],
 ]);
