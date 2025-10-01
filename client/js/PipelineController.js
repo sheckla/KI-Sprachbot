@@ -87,13 +87,15 @@ export class PipelineController {
         try {
             let response;
             if (type === "coqui-thorsten") {
-                response = await this.beezlebugAPI.tts_POST_coqui_thorsten(text);
-            } else if (type === "piper") {
+                response = await this.beezlebugAPI.tts_POST_coqui(text, "thorsten", speed, speaker);
+            } else if (type === "coqui-xttsv2") {
+                response = await this.beezlebugAPI.tts_POST_coqui(text, "xttsv2", speed, speaker);
+            }
+            else if (type === "piper") {
                 response = await this.beezlebugAPI.tts_POST_piper(text, emotion, 2.01 - speed);
-            } else {
-                response = await this.beezlebugAPI.tts_POST_coqui_xtts(text, speaker, speed)
             }
             let responseTimes = this.getResponseTime(t1, response.ms);
+            console.log(response);
             let answer = {
                 audio_data_url: response.audio_data_url,
                 responseTimes: responseTimes

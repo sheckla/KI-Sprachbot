@@ -8,6 +8,18 @@ aplay -l
 aplay -D plughw:1,0 /usr/share/sounds/alsa/Front_Center.wav
 
 
+// ===== WM8960 ubopod =====
+#It will capture sound an playback on hw:1
+arecord -f cd -Dhw:1 | aplay -Dhw:1
+
+#capture sound
+#arecord -d 10 -r 16000 -c 1 -t wav -f S16_LE test.wav
+arecord -D hw:1,0 -f S32_LE -r 16000 -c 2 test.wav
+
+#play sound file test.wav
+aplay -D hw:1,0 test.wav
+
+
 // ===== Autostart Skript! =====
 // chmod +x start.sh
 // ./start.sh

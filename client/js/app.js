@@ -394,7 +394,7 @@ function updateTTSOptions() {
   switch (selectedTypeTTS) {
     case "coqui-thorsten":
       break;
-      case "coqui-xtts":
+      case "coqui-xttsv2":
         document.getElementById("xtts-options").classList.remove("hidden");
         document.getElementById("speed-options").classList.remove("hidden");
         break;
