@@ -95,7 +95,6 @@ export class PipelineController {
                 response = await this.beezlebugAPI.tts_POST_piper(text, emotion, 2.01 - speed);
             }
             let responseTimes = this.getResponseTime(t1, response.ms);
-            console.log(response);
             let answer = {
                 audio_data_url: response.audio_data_url,
                 responseTimes: responseTimes

@@ -10,6 +10,7 @@ import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Cooldown } from "./Cooldown.js";
 import { Recorder} from "./MediaRecorder.js";
+import { initPushToTalk } from "./pttController.js";
 
 // ===== Basic Variables =====
 const pipelineController = new PipelineController();
@@ -69,7 +70,6 @@ async function buttonListenForVoiceActivation() {
     updateMeter("vad", vadScore, $("vad-threshold").value);
     updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
     updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
-    console.log("updating");
 
     if (Recorder.isRecording) {
       if (wakewordCooldown.isExpired()) {
@@ -246,7 +246,6 @@ async function startTTS() {
   // append response times
   let wrapper = buildResponseWrapper(result.responseTimes, " s");
   document.getElementById("tts-text").appendChild(wrapper);
-  console.log(result.responseTimes);
   return result;
 }
 
@@ -275,7 +274,6 @@ async function startPipeline() {
     finalResponseTime.network = (parseFloat(finalResponseTime.network) + parseFloat(network)).toFixed(2);
     finalResponseTime.total = (parseFloat(finalResponseTime.total) + parseFloat(total)).toFixed(2);
   }
-  console.log(finalResponseTime);
   // Final UI Update
   document.getElementById("final-wrapper").classList.remove("processing");
   document.getElementById("final-wrapper").classList.add("success");
@@ -441,7 +439,7 @@ function updateMeter(id, value, activateAt = 0.5) {
 document.getElementById("push-to-talk-begin").addEventListener("keydown", (event) => {
   if (event.key === " " || event.key === "Spacebar") { // " " für moderne Browser, "Spacebar" für ältere
     event.preventDefault();
-    initPushToTalk()
+    // initPushToTalk()
   }
 });
 
@@ -458,4 +456,6 @@ window.updateThresholdSlider = updateThresholdSlider;
 window.updateTTSOptions = updateTTSOptions;
 window.clearAll = clearAll;
 window.clearConversation = clearConversation;
+window.updateAudioInputLabel = updateAudioInputLabel;
+window.initPushToTalk = initPushToTalk;
 
