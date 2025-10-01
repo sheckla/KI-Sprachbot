@@ -63,11 +63,6 @@ if ($res === false || $http !== 200) {
 $audioBase64 = base64_encode($res);
 
 Response::success([
-  "ok"             => true,
-  "format"         => "wav",
   "audio_data_url" => "data:audio/wav;base64," . $audioBase64,
-  "size_bytes"     => strlen($res),
   "ms"             => $timer->getMs(),
-  "speaker"        => $speaker,
-  "speed"          => $speed,
 ]);
