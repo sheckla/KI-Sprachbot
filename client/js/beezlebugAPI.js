@@ -104,4 +104,17 @@ export class BeezlebugAPI {
     const responseText = await response.text();
     return JSON.parse(responseText);
   }
+
+  async tts_POST_coqui(text, model = "thorsten", speed = 1.0, speaker = "") {
+    const formData = new FormData();
+    formData.append("text", text);
+    formData.append("speaker", speaker);
+    formData.append("speed", speed);
+    formData.append("model", model);
+    formData.append("language_id", "de");
+    const url = this.apiUrl + "/server/tts/coqui.php";
+    const response = await fetch(url, { method: "POST", body: formData });
+    const responseText = await response.text();
+    return JSON.parse(responseText);
+  }
 }

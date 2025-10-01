@@ -6,12 +6,16 @@
  * - Send audio to pipeline entry point
  *  16.09.2025 Daniel Graf
  *****************************/
-let pttButton = document.getElementById('push-to-talk-begin')
+import { Recorder } from "./MediaRecorder.js";
+let pttButton = document.getElementById('push-to-talk-begin');
+const fileInput = document.getElementById("file");
+let pttStartTime;
+let animationFrameId;
 
 /*****************************
  * Init PTS into Pipelin
  *****************************/
-async function initPushToTalk() {
+export async function initPushToTalk() {
   // already recording -> stop recording
   if (Recorder.isRecording) {
     stopPushToTalk();
@@ -23,7 +27,7 @@ async function initPushToTalk() {
 }
 
 
-async function stopPushToTalk() {
+export async function stopPushToTalk() {
   const result = await Recorder.stop()
   stopTimer();
   pttButton.classList.remove('push-to-talk-active');
@@ -47,7 +51,7 @@ async function stopPushToTalk() {
 /*****************************
  *  Start ms-timer when activating Push-to-Talk
  *****************************/
-async function startTimer() {
+export async function startTimer() {
   pttStartTime = performance.now();
   function timeStep() {
     const elapsed = (performance.now() - pttStartTime) / 1000.0;
