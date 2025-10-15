@@ -1,0 +1,16 @@
+# Skript speichern unter /home/pi/autostart.sh
+# chmod +x /home/pi/autostart.sh
+# crontab -e
+#   am Ende hinzufügen: @reboot /home/pi/autostart.sh &
+# neustart: sudo reboot
+
+# Autostart Skript!
+#!/bin/bash
+sleep 10
+CLIENT_URL="https://one.beezlebug.com/ki-sprachbot/client/index.html"
+PROFILE_PATH=$(find /home/pi/.mozilla/firefox -maxdepth 1 -type d -name "*.default-esr" | head -n 1)
+if [ -n "$PROFILE_PATH" ]; then
+  echo 'user_pref("permissions.default.microphone",1);' >> "$PROFILE_PATH/prefs.js"
+  echo 'user_pref("media.navigator.permission.disabled",true);' >> "$PROFILE_PATH/prefs.js"
+fi
+/usr/bin/firefox-esr "$CLIENT_URL" &
