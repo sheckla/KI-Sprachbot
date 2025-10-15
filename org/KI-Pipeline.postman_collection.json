@@ -1,0 +1,236 @@
+{
+	"info": {
+		"_postman_id": "8f7f45d6-6cff-4543-b22b-7453d209374a",
+		"name": "KI-Pipeline",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45973825",
+		"_collection_link": "https://danielgraf-5846927.postman.co/workspace/Daniel-Graf's-Workspace~471f4bdd-8623-4b95-8d73-aacd2f6a771a/collection/45973825-8f7f45d6-6cff-4543-b22b-7453d209374a?action=share&source=collection_link&creator=45973825"
+	},
+	"item": [
+		{
+			"name": "STT",
+			"item": [
+				{
+					"name": "Transcribe",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/daniel/Desktop/Projekte/KI-Sprachbot/audios/samples/lena-thorsten-angry.wav"
+								},
+								{
+									"key": "quality",
+									"value": "large-v3-turbo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://one.beezlebug.com/ki-sprachbot/server/stt/index.php",
+							"protocol": "https",
+							"host": [
+								"one",
+								"beezlebug",
+								"com"
+							],
+							"path": [
+								"ki-sprachbot",
+								"server",
+								"stt",
+								"index.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "LLM",
+			"item": [
+				{
+					"name": "Embeddings",
+					"item": [
+						{
+							"name": "Embedding Nomic",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sk-local-ollama-key-123",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"model\":\"nomic-embed-text\",\"input\":\"Hallo Welt, ich bin ein Embedding-Test.\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://one.beezlebug.com/api/embeddings/",
+									"protocol": "https",
+									"host": [
+										"one",
+										"beezlebug",
+										"com"
+									],
+									"path": [
+										"api",
+										"embeddings",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Sprachbot Chatbot",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "message",
+									"value": "Wann muss ich arbeiten?",
+									"type": "text"
+								},
+								{
+									"key": "conversation",
+									"value": "conversationID",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "https://one.beezlebug.com/ki-sprachbot/server/llm/",
+							"protocol": "https",
+							"host": [
+								"one",
+								"beezlebug",
+								"com"
+							],
+							"path": [
+								"ki-sprachbot",
+								"server",
+								"llm",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "TTS",
+			"item": [
+				{
+					"name": "Piper CMD",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "text",
+									"value": "Hi spreche das mal Bitte aus!",
+									"type": "text"
+								},
+								{
+									"key": "speed",
+									"value": "1.5",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://one.beezlebug.com/ki-sprachbot/server/tts/piper.php",
+							"protocol": "https",
+							"host": [
+								"one",
+								"beezlebug",
+								"com"
+							],
+							"path": [
+								"ki-sprachbot",
+								"server",
+								"tts",
+								"piper.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Coqui Runtime",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "text",
+									"value": "Hey nah",
+									"type": "text"
+								},
+								{
+									"key": "speed",
+									"value": "1.5",
+									"type": "text"
+								},
+								{
+									"key": "speaker",
+									"value": "Tammie Ema",
+									"type": "text"
+								},
+								{
+									"key": "model",
+									"value": "xttsv2",
+									"description": "thorsten, xttsv2",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://one.beezlebug.com/ki-sprachbot/server/tts/coqui.php",
+							"protocol": "https",
+							"host": [
+								"one",
+								"beezlebug",
+								"com"
+							],
+							"path": [
+								"ki-sprachbot",
+								"server",
+								"tts",
+								"coqui.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
