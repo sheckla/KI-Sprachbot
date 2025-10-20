@@ -46,7 +46,7 @@ body {
 }
 
 .section:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1);
 }
 
 button {
@@ -154,7 +154,6 @@ a {
 }
 
 .card:hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 

@@ -10,7 +10,9 @@ import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Cooldown } from "./Cooldown.js";
 import { Recorder} from "./MediaRecorder.js";
-import { initPushToTalk } from "./pttController.js";
+import { initPushToTalk, stopPushToTalk } from "./pttController.js";
+import { ScoreChart } from "./ScoreChart.js";
+
 
 // ===== Basic Variables =====
 const pipelineController = new PipelineController();
@@ -20,7 +22,9 @@ const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
 let readyToListen = true;
 const silenceDetector = new SilenceDetector(5500, 0.0);
+let scoreChart
 const $ = (id) => document.getElementById(id);
+
 
 /*************************************************************
  *  Init Application
@@ -34,6 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateAudioInputLabel();
   updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
+  scoreChart = new ScoreChart("scoreChart", 50);
 
   // disable some functions until ready
   document.getElementById("start").disabled = true;
@@ -67,9 +72,14 @@ async function buttonListenForVoiceActivation() {
     const wakewordThreshold = $("wakeword-threshold").value;
     silenceDetector.addValue(vadScore);
     silenceDetector.threshold = $("speech-timeout-threshold").value;
-    updateMeter("vad", vadScore, $("vad-threshold").value);
-    updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
-    updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
+    // updateMeter("vad", vadScore, $("vad-threshold").value);
+    // updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
+    // updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
+    updateMeter("vad", vadScore, vadThreshold);
+    updateMeter("wakeword", wakewordScore, wakewordThreshold);
+    if (scoreChart) {
+      scoreChart.addData(vadScore, wakewordScore);
+    }
 
     if (Recorder.isRecording) {
       if (wakewordCooldown.isExpired()) {
@@ -94,6 +104,12 @@ async function buttonListenForVoiceActivation() {
   }
   Recorder.setOnChunkCallback(processAudioChunk);
 }
+
+window.addEventListener("resize", () => {
+  if (scoreChart && scoreChart.chart) {
+    scoreChart.chart.resize();
+  }
+});
 
 
 /*****************************
