@@ -94,8 +94,16 @@ export class Recorder {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         // TODO: only works for chrome now, firefox doesn't allow 16kHz sampling
         // const audioContext = new AudioContext();
-        const audioContext = new AudioContext({ sampleRate: 16000 });
-        const source = audioContext.createMediaStreamSource(stream);
+        let audioContext;
+        let source;
+        try {
+            audioContext = new AudioContext({ sampleRate: 16000 });
+            source = audioContext.createMediaStreamSource(stream);
+        } catch (e) {
+            console.error("Error creating AudioContext with 16kHz:", e);
+            alert("WakeWord-Erkennung wird nicht von diesem Browser unterstützt! Bitte auf Chrome wechseln").
+            audioContext = new AudioContext();
+        }
 
 
         // --- Load Worklet ---
