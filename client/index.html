@@ -54,7 +54,7 @@
             <button id="start-file" onclick="buttonProcessAudioForWakeWord()" disabled>Audio-Datei testen</button>
           </div>
 
-          <canvas id="scoreChart"></canvas>
+          <canvas height="300" id="scoreChart"></canvas>
 
 
           <label for="wake-word-model">Wakeword Modell</label>
@@ -66,13 +66,15 @@
           <label for="vad-threshold">Empfindlichkeit für Spracherkennung: <span id="vad-threshold-display"></span></label>
           <input type="range" id="vad-threshold" min="0" max="1" step="0.025" value="0.5" oninput="updateThresholdSlider(this)">
 
-          <label for="speech-timeout-threshold"> Stille-Erkennung bis zum Ende der Aufnahme: <span id="speech-timeout-threshold-display"></span></label>
+          <label for="speech-timeout-threshold"> Stille-Erkennung bis zum Ende der Aufnahme: <span
+              id="speech-timeout-threshold-display"></span></label>
           <input type="range" id="speech-timeout-threshold" min="0" max="1" step="0.025" value="0.5"
             oninput="updateThresholdSlider(this)">
 
 
 
-          <label for="wakeword-threshold"> Empfindlichkeit für Aktivierungswort: <span id="wakeword-threshold-display"></span></label>
+          <label for="wakeword-threshold"> Empfindlichkeit für Aktivierungswort: <span
+              id="wakeword-threshold-display"></span></label>
           <input type="range" id="wakeword-threshold" min="0" max="1" step="0.025" value="0.5"
             oninput="updateThresholdSlider(this)">
 
@@ -86,6 +88,13 @@
           <audio id="inputPlayer" controls></audio>
           <label id="audio-player-label" for="inputPlayer"></label>
           <div class="meter-wrapper">
+            <label>DB-Level:</label>
+            <div id="db-meter-wrapper" class="meter">
+              <div id="db-meter" class="meter-fill meter-fill-gray"></div>
+            </div>
+            <span id="db-meter-value">0.00</span>
+          </div>
+          <div class="meter-wrapper">
             <label>VAD-Level:</label>
             <div id="vad-meter-wrapper" class="meter">
               <div id="vad-meter" class="meter-fill"></div>
@@ -95,36 +104,36 @@
           <div class="meter-wrapper">
             <label>Wake-Word-Level:</label>
             <div id="wakeword-meter-wrapper" class="meter">
-              <div id="wakeword-meter" class="meter-fill"></div>
+              <div id="wakeword-meter" class="meter-fill meter-fill-red"></div>
             </div>
             <span id="wakeword-meter-value">0.00</span>
           </div>
+
+
           <div id="status" class="status"></div>
         </div>
       </div>
+      <!-- ===================================================== -->
+      <!-- PIPELINE -->
+      <!-- ===================================================== -->
+        <h2>Pipeline Control</h2>
+        <div class="grid-2">
+          <div class="card">
+            <button id="pipeline-start" onclick="startPipeline()">▶ Pipeline starten</button>
+            <div class="button-row">
+              <button id="clear" class="delete-button" onclick="clearAll()">Alles zurücksetzen</button>
+              <button id="reset" class="delete-button" onclick="clearConversation()">Konversation löschen</button>
+            </div>
+            <p>Aktuelle Conversation: <span id="conversation">none</span></p>
+          </div>
+          <div class="card">
+            <div id="final-wrapper" class="answer">
+              <span id="final-text">(Antwort erscheint hier)</span>
+            </div>
+          </div>
+        </div>
     </section>
 
-    <!-- ===================================================== -->
-    <!-- PIPELINE -->
-    <!-- ===================================================== -->
-    <section class="section pipeline">
-      <h2>Pipeline Control</h2>
-      <div class="grid-2">
-        <div class="card">
-          <button id="pipeline-start" onclick="startPipeline()">▶ Pipeline starten</button>
-          <div class="button-row">
-            <button id="clear" class="delete-button" onclick="clearAll()">Alles zurücksetzen</button>
-            <button id="reset" class="delete-button" onclick="clearConversation()">Konversation löschen</button>
-          </div>
-          <p>Aktuelle Conversation: <span id="conversation">none</span></p>
-        </div>
-        <div class="card">
-          <div id="final-wrapper" class="answer">
-            <span id="final-text">(Antwort erscheint hier)</span>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- ===================================================== -->
     <!-- SPEECH TO TEXT -->

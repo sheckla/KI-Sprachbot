@@ -9,9 +9,10 @@ import { OpenWakeWordController } from "./OpenWakeWordController.js";
 import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Cooldown } from "./Cooldown.js";
-import { Recorder} from "./MediaRecorder.js";
-import { initPushToTalk, stopPushToTalk } from "./pttController.js";
+import { Recorder } from "./MediaRecorder.js";
+import { initPushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
+import { TwiBotState } from "./TwiBotState.js";
 
 // ===== Fixed Variables =====
 const PUSH_TO_TALK_COOLDOWN_MS = 3000;
@@ -24,10 +25,11 @@ const silenceDetector = new SilenceDetector(5500, 0.0);
 let scoreChart
 const fileInput = document.getElementById("file");
 const $ = (id) => document.getElementById(id);
+export const state = new TwiBotState();
 
-// ===== Runtime state =====
+// ===== State Control Init =====
 let readyToListen = true;
-let pipelineBlocked = false;
+state.setPipelineBlocked(false);
 
 /*************************************************************
  *  Init Application
@@ -57,10 +59,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   buttonListenForVoiceActivation();
 
   window.addEventListener("resize", () => {
-  if (scoreChart && scoreChart.chart) {
-    scoreChart.chart.resize();
-  }
-});
+    if (scoreChart && scoreChart.chart) {
+      scoreChart.chart.resize();
+    }
+  });
 
 });
 
@@ -73,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function buttonListenForVoiceActivation() {
   await Recorder.loadWorklet();
 
-  async function processAudioChunk({ chunk }) {
+  async function processAudioChunk({ chunk, rms, db }) {
     // update meters
     const vadScore = await wakewordController.runVAD(chunk);
     const vadThreshold = $("vad-threshold").value;
@@ -81,11 +83,17 @@ async function buttonListenForVoiceActivation() {
     const wakewordThreshold = $("wakeword-threshold").value;
     silenceDetector.addValue(vadScore);
     silenceDetector.threshold = $("speech-timeout-threshold").value;
+
+    // if (!wakewordScore) wakewordScore = 0.0;
+
     // updateMeter("vad", vadScore, $("vad-threshold").value);
     updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
     // updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
-    updateMeter("vad", vadScore, vadThreshold);
+    // updateMeter("vad", vadScore, vadThreshold);
     updateMeter("wakeword", wakewordScore, wakewordThreshold);
+    // console.log(wakewordScore);
+    const normalizedDb = Math.min(1, Math.max(0, (db + 60) / 60)); // map -60..0 -> 0..1
+    updateMeter("db", normalizedDb);
     if (scoreChart) {
       scoreChart.addData(vadScore, wakewordScore);
     }
@@ -101,11 +109,15 @@ async function buttonListenForVoiceActivation() {
 
     }
 
-    if (readyToListen && wakewordScore !== null && wakewordScore >= wakewordThreshold && !pipelineBlocked) {
+    if (readyToListen && wakewordScore !== null && wakewordScore >= wakewordThreshold && !state.pipelineBlocked) {
       if (!Recorder.isRecording) {
         await initPushToTalk();
         Recorder.isRecording = true;
         wakewordCooldown.start(); // Cooldown läuft ab jetzt
+        for (let i = 0; i < silenceDetector.maxFrames; i++) {
+          silenceDetector.addValue(1.0); // reset buffer
+        }
+        state.setReadyToListen(false);
         readyToListen = false;
       }
     }
@@ -273,15 +285,14 @@ async function startTTS() {
  * - STT -> LLM -> TTS
  *****************************/
 async function startPipeline() {
-  if (pipelineBlocked) {
+  if (state.pipelineBlocked) {
     console.log("Pipeline is blocked!");
     return;
   }
 
   // Prepare run
   clearAll();
-  pipelineBlocked = true;
-  // pipelineController.blocked = true;
+  state.setPipelineBlocked(true);
   document.getElementById("tts-input").value = "";
   document.getElementById("llm-question").value = "";
   document.getElementById("final-wrapper").classList.add("processing");
@@ -308,8 +319,7 @@ async function startPipeline() {
 
   let wrapper = buildResponseWrapper(finalResponseTime, " s");
   document.getElementById("final-text").appendChild(wrapper);
-  // pipelineController.blocked = false
-  pipelineBlocked = false;
+  state.setPipelineBlocked(false);
 }
 
 /*****************************
@@ -419,13 +429,13 @@ function updateTTSOptions() {
   switch (selectedTypeTTS) {
     case "coqui-thorsten":
       break;
-      case "coqui-xttsv2":
-        document.getElementById("xtts-options").classList.remove("hidden");
-        document.getElementById("speed-options").classList.remove("hidden");
-        break;
-        case "piper":
-          document.getElementById("piper-options").classList.remove("hidden");
-          document.getElementById("speed-options").classList.remove("hidden");
+    case "coqui-xttsv2":
+      document.getElementById("xtts-options").classList.remove("hidden");
+      document.getElementById("speed-options").classList.remove("hidden");
+      break;
+    case "piper":
+      document.getElementById("piper-options").classList.remove("hidden");
+      document.getElementById("speed-options").classList.remove("hidden");
       break;
   }
 }

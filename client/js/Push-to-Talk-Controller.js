@@ -7,15 +7,17 @@
  *  16.09.2025 Daniel Graf
  *****************************/
 import { Recorder } from "./MediaRecorder.js";
+import { state } from "./app.js";
 let pttButton = document.getElementById('push-to-talk-begin');
 const fileInput = document.getElementById("file");
 let pttStartTime;
 let animationFrameId;
 
 /*****************************
- * Init PTS into Pipelin
+ * Init PTS into Pipeline
  *****************************/
 export async function initPushToTalk() {
+  if (state.pipelineBlocked) {return;}
   // already recording -> stop recording
   if (Recorder.isRecording) {
     stopPushToTalk();

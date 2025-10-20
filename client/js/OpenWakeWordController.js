@@ -148,7 +148,7 @@ export class OpenWakeWordController {
 
     async runEmbedding() {
 
-        if (this.melBuffer.length < 76) return null;
+        if (this.melBuffer.length < 76) return 0.0;
         // while (this.melBuffer.length < 76) {
         this.melBuffer.splice(0, 8); // Stride = 8 Frames (wie im Web-Repo)
 
@@ -172,7 +172,7 @@ export class OpenWakeWordController {
     }
 
     async runWakeWord() {
-        if (this.embeddingBuffer.length < 16) return null;
+        if (this.embeddingBuffer.length < 16) return 0.0;
 
         const flatEmb = new Float32Array(16 * 96);
         for (let i = 0; i < this.embeddingBuffer.length; i++) {
@@ -182,7 +182,7 @@ export class OpenWakeWordController {
         const wwIn = new ort.Tensor("float32", flatEmb, [1, 16, 96]);
         const wwOut = await this.wakewordSession.run({ [this.wakewordSession.inputNames[0]]: wwIn });
         const score = wwOut[this.wakewordSession.outputNames[0]].data[0];
-
+        console.log(score);
         return score;
     }
 }

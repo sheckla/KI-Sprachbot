@@ -18,8 +18,8 @@ export class ScoreChart {
         {
           label: "VAD Score",
           data: Array(this.maxPoints).fill(0),
-          borderColor: "rgba(75, 192, 192, 1)",
-          backgroundColor: "rgba(75, 192, 192, 0.2)",
+          borderColor: "#6d5dfc",
+          backgroundColor: "rgba(81, 75, 192, 0.14)",
           tension: 0.25,
           fill: true,
         },

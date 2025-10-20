@@ -228,7 +228,21 @@ a {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, var(--color-accent), #9a8cfc);
-  transition: width 0.15s ease-out;
+  transition: width 0.1s ease-out;
+}
+
+.meter-fill-gray {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, gray, #7c7c7c);
+  transition: width 0.1s ease-out;
+}
+
+.meter-fill-red {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-danger), #9a8cfc);
+  transition: width 0.1s ease-out;
 }
 
 .meter-active .meter-fill {
