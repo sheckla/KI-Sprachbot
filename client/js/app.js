@@ -13,18 +13,21 @@ import { Recorder} from "./MediaRecorder.js";
 import { initPushToTalk, stopPushToTalk } from "./pttController.js";
 import { ScoreChart } from "./ScoreChart.js";
 
+// ===== Fixed Variables =====
+const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 
 // ===== Basic Variables =====
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
-const fileInput = document.getElementById("file");
-const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
-let readyToListen = true;
 const silenceDetector = new SilenceDetector(5500, 0.0);
 let scoreChart
+const fileInput = document.getElementById("file");
 const $ = (id) => document.getElementById(id);
 
+// ===== Runtime state =====
+let readyToListen = true;
+let pipelineBlocked = false;
 
 /*************************************************************
  *  Init Application
@@ -46,12 +49,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // load OpenWakeWord
   await wakewordController.loadProcessingModels();
-  console.log("WakeWordController ready");
+  console.log("AI-Assistant ready to listen!");
 
   // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
   buttonListenForVoiceActivation();
+
+  window.addEventListener("resize", () => {
+  if (scoreChart && scoreChart.chart) {
+    scoreChart.chart.resize();
+  }
+});
+
 });
 
 /*****************************
@@ -59,7 +69,6 @@ document.addEventListener("DOMContentLoaded", async () => {
  * - AudioWorklet to chunk audio into 1280 samples (80ms @16kHz = 1240 samples)
  * - Sends chunks to WakeWordController for detection
  * - On detection, triggers Recorder.start()
- * - todo port to different class
  *****************************/
 async function buttonListenForVoiceActivation() {
   await Recorder.loadWorklet();
@@ -73,7 +82,7 @@ async function buttonListenForVoiceActivation() {
     silenceDetector.addValue(vadScore);
     silenceDetector.threshold = $("speech-timeout-threshold").value;
     // updateMeter("vad", vadScore, $("vad-threshold").value);
-    // updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
+    updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
     // updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
     updateMeter("vad", vadScore, vadThreshold);
     updateMeter("wakeword", wakewordScore, wakewordThreshold);
@@ -83,9 +92,8 @@ async function buttonListenForVoiceActivation() {
 
     if (Recorder.isRecording) {
       if (wakewordCooldown.isExpired()) {
-        console.log(silenceDetector.getAvg().toFixed(3))
+        // console.log(silenceDetector.getAvg().toFixed(3))
         if (silenceDetector.isSilent()) {
-          console.log("Es war silent!");
           await stopPushToTalk();
           readyToListen = true;
         }
@@ -93,7 +101,7 @@ async function buttonListenForVoiceActivation() {
 
     }
 
-    if (readyToListen && wakewordScore !== null && wakewordScore >= wakewordThreshold) {
+    if (readyToListen && wakewordScore !== null && wakewordScore >= wakewordThreshold && !pipelineBlocked) {
       if (!Recorder.isRecording) {
         await initPushToTalk();
         Recorder.isRecording = true;
@@ -105,11 +113,6 @@ async function buttonListenForVoiceActivation() {
   Recorder.setOnChunkCallback(processAudioChunk);
 }
 
-window.addEventListener("resize", () => {
-  if (scoreChart && scoreChart.chart) {
-    scoreChart.chart.resize();
-  }
-});
 
 
 /*****************************
@@ -121,7 +124,7 @@ async function buttonProcessAudioForWakeWord() {
   let result = await wakewordController.initWakeWordFromFile(fileInput.files?.[0], threshold);
   console.log(result);
   if (result.scores.length === 0) {
-    console.log("no scores bruh");
+    // console.log("no scores bruh");
     return;
   }
   if (result.hit) {
@@ -270,8 +273,15 @@ async function startTTS() {
  * - STT -> LLM -> TTS
  *****************************/
 async function startPipeline() {
+  if (pipelineBlocked) {
+    console.log("Pipeline is blocked!");
+    return;
+  }
+
   // Prepare run
   clearAll();
+  pipelineBlocked = true;
+  // pipelineController.blocked = true;
   document.getElementById("tts-input").value = "";
   document.getElementById("llm-question").value = "";
   document.getElementById("final-wrapper").classList.add("processing");
@@ -298,7 +308,8 @@ async function startPipeline() {
 
   let wrapper = buildResponseWrapper(finalResponseTime, " s");
   document.getElementById("final-text").appendChild(wrapper);
-
+  // pipelineController.blocked = false
+  pipelineBlocked = false;
 }
 
 /*****************************

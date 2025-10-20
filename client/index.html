@@ -54,7 +54,7 @@
             <button id="start-file" onclick="buttonProcessAudioForWakeWord()" disabled>Audio-Datei testen</button>
           </div>
 
-          <canvas id="scoreChart" ></canvas>
+          <canvas id="scoreChart"></canvas>
 
 
           <label for="wake-word-model">Wakeword Modell</label>
@@ -63,33 +63,20 @@
             <option value="./models/hey_rhasspy_v0.1.onnx">Hey Rhasspy V0.1</option>
           </select>
 
-          <label for="vad-threshold">VAD Schwelle <span id="vad-threshold-display"></span></label>
+          <label for="vad-threshold">Empfindlichkeit für Spracherkennung: <span id="vad-threshold-display"></span></label>
           <input type="range" id="vad-threshold" min="0" max="1" step="0.025" value="0.5" oninput="updateThresholdSlider(this)">
 
-          <label for="speech-timeout-threshold">Silence Schwelle <span id="speech-timeout-threshold-display"></span></label>
+          <label for="speech-timeout-threshold"> Stille-Erkennung bis zum Ende der Aufnahme: <span id="speech-timeout-threshold-display"></span></label>
           <input type="range" id="speech-timeout-threshold" min="0" max="1" step="0.025" value="0.5"
             oninput="updateThresholdSlider(this)">
 
-          <div class="meter-wrapper">
-            <label>VAD-Level:</label>
-            <div id="vad-meter-wrapper" class="meter">
-              <div id="vad-meter" class="meter-fill"></div>
-            </div>
-            <span id="vad-meter-value">0.00</span>
-          </div>
 
-          <label for="wakeword-threshold">WakeWord Schwelle <span id="wakeword-threshold-display"></span></label>
+
+          <label for="wakeword-threshold"> Empfindlichkeit für Aktivierungswort: <span id="wakeword-threshold-display"></span></label>
           <input type="range" id="wakeword-threshold" min="0" max="1" step="0.025" value="0.5"
             oninput="updateThresholdSlider(this)">
 
 
-          <div class="meter-wrapper">
-            <label>Wake-Word-Level:</label>
-            <div id="wakeword-meter-wrapper" class="meter">
-              <div id="wakeword-meter" class="meter-fill"></div>
-            </div>
-            <span id="wakeword-meter-value">0.00</span>
-          </div>
         </div>
 
         <!-- File Input -->
@@ -98,6 +85,21 @@
           <input id="file" type="file" accept="audio/*" oninput="updateAudioInputLabel()" />
           <audio id="inputPlayer" controls></audio>
           <label id="audio-player-label" for="inputPlayer"></label>
+          <div class="meter-wrapper">
+            <label>VAD-Level:</label>
+            <div id="vad-meter-wrapper" class="meter">
+              <div id="vad-meter" class="meter-fill"></div>
+            </div>
+            <span id="vad-meter-value">0.00</span>
+          </div>
+          <div class="meter-wrapper">
+            <label>Wake-Word-Level:</label>
+            <div id="wakeword-meter-wrapper" class="meter">
+              <div id="wakeword-meter" class="meter-fill"></div>
+            </div>
+            <span id="wakeword-meter-value">0.00</span>
+          </div>
+          <div id="status" class="status"></div>
         </div>
       </div>
     </section>
@@ -158,7 +160,7 @@
       <h2>KI-Agent</h2>
       <div class="grid-2">
         <div class="card">
-          <input id="llm-question" placeholder="Deine Frage an den Chatbot" value="Wer bist du?"/>
+          <input id="llm-question" placeholder="Deine Frage an den Chatbot" value="Wer bist du?" />
           <button id="llm-ask" onclick="startLLM()">➡ Frage stellen</button>
         </div>
         <div class="card">
@@ -184,7 +186,8 @@
             <option value="coqui-thorsten">Coqui TTS (Thorsten)</option>
             <option value="piper">Piper TTS</option>
           </select>
-          <input id="tts-input" type="text" placeholder="Text eingeben..." value="Ich bin twi-bot, ein KI-Sprachassistent bei cybob. Ich helfe bei Projektmanagement, Akquise und Onboarding." />
+          <input id="tts-input" type="text" placeholder="Text eingeben..."
+            value="Ich bin twi-bot, ein KI-Sprachassistent bei cybob. Ich helfe bei Projektmanagement, Akquise und Onboarding." />
           <!-- Coqui Options -->
 
           <div id="xtts-options" class="hidden">
@@ -194,8 +197,8 @@
               <option value="Gitta Nikolina">Gitta Nikolina</option>
               <option value="Dionisio Schuyler">Dionisio Schuyler</option>"
               <option value="Aaron Dreschner">Aaron Dreschner</option>
-<!-- Available Speakers for xttsv2 -->
-                    <!-- <option value="Claribel Dervla" SELECTED>Claribel Dervla</option>"
+              <!-- Available Speakers for xttsv2 -->
+              <!-- <option value="Claribel Dervla" SELECTED>Claribel Dervla</option>"
                     <option value="Daisy Studious" SELECTED>Daisy Studious</option>"
                     <option value="Gracie Wise" SELECTED>Gracie Wise</option>"
                     <option value="Tammie Ema" SELECTED>Tammie Ema</option>"
@@ -288,7 +291,7 @@
   <!-- ===================================================== -->
   <!-- SCRIPTS -->
   <!-- ===================================================== -->
-   <!-- Version 1.22 Wichtig! -->
+  <!-- Version 1.22 Wichtig! -->
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22/dist/ort.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- <script src="./js/SilenceDetector.js"></script> -->

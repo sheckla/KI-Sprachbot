@@ -57,7 +57,7 @@ export class OpenWakeWordController {
         if (this.wakewordSession) this.wakewordSession = null;
         console.log("loading Wake-Word-model " + name);
         this.wakewordSession = await ort.InferenceSession.create(name);
-        console.log("model loaded!");
+        console.log("model loaded!", name);
     }
 
     async initWakeWordFromFile(file, threshold = 0.5) {

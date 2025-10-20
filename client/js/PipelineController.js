@@ -13,8 +13,10 @@ import { BeezlebugAPI } from "./BeezlebugAPI.js";
  *****************************/
 export class PipelineController {
     beezlebugAPI = new BeezlebugAPI();
+    blocked = false;
 
     async speechToText(file, quality) {
+        if (this.blocked) return;
         let t1 = Date.now();
         try {
             const response = await this.beezlebugAPI.stt_POST(file, quality);
@@ -30,6 +32,7 @@ export class PipelineController {
     }
 
     async speechToEmotion(file) {
+        if (this.blocked) return;
         let t1 = Date.now();
         try {
             const response = await this.beezlebugAPI.stt_emotion_POST(file);
@@ -68,6 +71,7 @@ export class PipelineController {
     }
 
     async startLargeLanguageModelInference(question) {
+        if (this.blocked) return;
         let t1 = Date.now();
         try {
             const response = await this.beezlebugAPI.llm_POST(question);
@@ -83,6 +87,7 @@ export class PipelineController {
     }
 
     async generateTextToSpeech(text, type = "coqui", emotion = 4, speed = 1.0, speaker = "Tammie Ema") {
+        if (this.blocked) return;
         let t1 = Date.now();
         try {
             let response;
