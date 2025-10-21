@@ -14,3 +14,19 @@ if [ -n "$PROFILE_PATH" ]; then
   echo 'user_pref("media.navigator.permission.disabled",true);' >> "$PROFILE_PATH/prefs.js"
 fi
 /usr/bin/firefox-esr "$CLIENT_URL" &
+
+[Unit]
+Description=Autostart Script
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/home/cybob/autostart.sh
+User=cybob
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/cybob/.Xauthority
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
