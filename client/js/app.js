@@ -10,7 +10,7 @@ import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Cooldown } from "./Cooldown.js";
 import { Recorder } from "./MediaRecorder.js";
-import { initPushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
+import { togglePushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
 import { TwiBotState } from "./TwiBotState.js";
 
@@ -21,7 +21,7 @@ const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 export const state = new TwiBotState();
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
-const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
+// const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
 const silenceDetector = new SilenceDetector();
 
 
@@ -36,6 +36,8 @@ const $ = (id) => document.getElementById(id);
 *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
   // state init
+  let audio = new Audio("./audio/startup.mp3");
+  await audio.play().catch(() => { });
   state.setPipelineBlocked(false);
 
   // initial UI update
@@ -62,74 +64,81 @@ document.addEventListener("DOMContentLoaded", async () => {
   // load OpenWakeWord
   await wakewordController.loadProcessingModels();
   console.log("AI-Assistant ready to listen!");
+  audio = new Audio("./audio/init-complete.mp3");
+  await audio.play().catch(() => { });
 
   // enable functions
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
   buttonListenForVoiceActivation();
 });
-
 /*****************************
  *  Activate WakeWord/VAD Listening
  * - AudioWorklet to chunk audio into 1280 samples (80ms @16kHz = 1240 samples)
  * - Sends chunks to WakeWordController for detection
  * - On detection, triggers Recorder.start()
  *****************************/
+let i = 0;
 async function buttonListenForVoiceActivation() {
   await Recorder.loadWorklet();
 
   async function processAudioChunk({ chunk, rms, db }) {
+    i++
     // update meters
     const vadScore = await wakewordController.runVAD(chunk);
     const vadThreshold = $("vad-threshold").value;
     const wakewordScore = await wakewordController.processChunk(chunk);
     const wakewordThreshold = $("wakeword-threshold").value;
-    silenceDetector.addValue(vadScore);
-    silenceDetector.threshold = $("speech-timeout-threshold").value;
-
     const normalizedDb = Math.min(1, Math.max(0, (db + 60) / 60)); // [-60, 0] to [0, 1]
+    updateMeter("db", normalizedDb);
     updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
     updateMeter("wakeword", wakewordScore, wakewordThreshold);
-    updateMeter("db", normalizedDb);
+    // update chart
     if (wakeWordChart) {
       wakeWordChart.addData(vadScore, wakewordScore);
     }
+    silenceDetector.addValue(vadScore * normalizedDb);
+    silenceDetector.threshold = $("speech-timeout-threshold").value;
 
-    // Stop Push-To-Talk if silence detected
-    // if (Recorder.isRecording && wakewordCooldown.isExpired() && silenceDetector.isSilent()) {
-    if (Recorder.isRecording  && silenceDetector.isSilent()) {
-      await stopPushToTalk();
+    // ===== stop when silent =====
+    if (Recorder.isRecording && silenceDetector.isSilent() && state.pushToTalkCooldown.isExpired()) {
+      await togglePushToTalk();
       state.setReadyToListen(true);
     }
-    if (state.pipelineBlocked) return;
 
-    // hot window TTS-Speak + Cooldown
     if (state.warmedUpCooldown.isExpired() && state.warmedUp) {
       console.log("setting false from Chunk");
       state.setWarmedUp(false);
       state.warmedUpCooldown.reset();
-      document.get
     }
 
-    if (Recorder.isRecording) return;
+    // ===== already busy or blocked =====
+    if (state.pipelineBlocked || Recorder.isRecording) return;
 
-    // Start Push-to-Talk if System warmed up via VAD
-    if (state.warmedUp && (vadScore >= vadThreshold)) {
-      await initPushToTalk();
-      Recorder.isRecording = true;
+    async function startRecording() {
+      if (state.pipelineBlocked || Recorder.isRecording) return;
+      // play start-recording.mp3
+      let audio = new Audio("./audio/start-recording.mp3");
+      await audio.play().catch(() => { });
       silenceDetector.fillEmpty();
-      state.setReadyToListen(false);
+      state.pushToTalkCooldown.start();
+      await togglePushToTalk();
+      stopTTSPlayback();
+    }
+
+    // Start Push-To-Talk via VAD
+    // take normalizedDB  and vadScore into account
+    if (state.warmedUp &&
+      (vadScore * normalizedDb >= vadThreshold)) {
+      await startRecording();
       state.setWarmedUp(false);
       return;
     }
 
     // Start Push-To-Talk via WakeWord + Cooldown
-    if (state.readyToListen && (wakewordScore >= wakewordThreshold)) {
-      await initPushToTalk();
-      Recorder.isRecording = true;
-      silenceDetector.fillEmpty();
-      // wakewordCooldown.start(); // Cooldown läuft ab jetzt
-      state.setReadyToListen(false);
+    if ((wakewordScore >= wakewordThreshold)) {
+      await startRecording();
+      return;
     }
   }
   Recorder.setOnChunkCallback(processAudioChunk);
@@ -234,15 +243,19 @@ async function startLLM() {
   document.getElementById("llm-wrapper").classList.add("processing");
 
   const result = await pipelineController.startLargeLanguageModelInference(question);
+  const clean = result.text.replace(/\\u([\dA-F]{4})/gi,
+    (match, grp) => String.fromCharCode(parseInt(grp, 16))
+  );
 
   // show output
   document.getElementById("llm-wrapper").classList.remove("processing");
   document.getElementById("llm-wrapper").classList.add("success");
-  document.getElementById("llm-text").textContent = result.text;
-  window.llmAnswer = result.text;
+  document.getElementById("llm-text").textContent = clean;
+
+  window.llmAnswer = clean;
 
   // llm output to tts input
-  document.getElementById("tts-input").value = result.text;
+  document.getElementById("tts-input").value = clean;
 
   // append response times
   let wrapper = buildResponseWrapper(result.responseTimes, " s");
@@ -277,7 +290,8 @@ async function startTTS() {
   const player = document.getElementById("ttsPlayer");
   player.src = result.audio_data_url; // apply audio data
   // TODO toggle autoplay
-  player.play().catch(() => { });
+  startTTSPlayback();
+  // player.play().catch(() => { });
 
   // update html
   document.getElementById("tts-wrapper").classList.remove("processing");
@@ -297,10 +311,11 @@ async function startPipeline() {
     console.log("Pipeline is blocked!");
     return;
   }
-
+  let audio = new Audio("./audio/stop-recording.mp3");
+  await audio.play().catch(() => { });
   // Prepare run
-  clearAll();
   state.setPipelineBlocked(true);
+  clearAll();
   document.getElementById("tts-input").value = "";
   document.getElementById("llm-question").value = "";
   document.getElementById("final-wrapper").classList.add("processing");
@@ -429,6 +444,26 @@ function buildResponseWrapper(data, suffix = "") {
 }
 
 
+function startTTSPlayback() {
+  const player = document.getElementById("ttsPlayer");
+  player.volume = 1.0;
+  player.play().catch(() => { });
+}
+
+export function stopTTSPlayback() {
+  const player = document.getElementById("ttsPlayer");
+  const fadeOut = setInterval(() => {
+    if (player.volume <= 0.1) {
+      player.volume = 0.0;
+      clearInterval(fadeOut);
+    }
+    player.volume = Math.max(0.0, player.volume - 0.1);
+  }, 100);
+  // player.pause();
+  // player.currentTime = 0;
+}
+
+
 /*************************************************************
  *  Update Functions
  *************************************************************/
@@ -525,5 +560,5 @@ window.updateTTSOptions = updateTTSOptions;
 window.clearAll = clearAll;
 window.clearConversation = clearConversation;
 window.updateAudioInputLabel = updateAudioInputLabel;
-window.initPushToTalk = initPushToTalk;
+window.togglePushToTalk = togglePushToTalk;
 

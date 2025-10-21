@@ -5,8 +5,10 @@
 import { Cooldown } from "./Cooldown.js";
 
 const HOT_LISTEN_MS = 5000;
+const PUSH_TO_TALK_COOLDOWN_MS = 1000;
 export class TwiBotState {
     warmedUpCooldown = new Cooldown(HOT_LISTEN_MS);
+    pushToTalkCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
     pipelineBlocked = false;
     readyToListen = true;
     warmedUp = false;

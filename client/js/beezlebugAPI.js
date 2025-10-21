@@ -29,7 +29,7 @@ export class BeezlebugAPI {
   async stt_emotion_POST(file) {
     const formData = new FormData();
     formData.append("file", file, file.name);
-    const url = this.apiUrl + "/server/stt/stt-emotion.php";
+    const url = this.apiUrl + "/server/stt/emotion.php";
     const response = await fetch(url, { method: "POST", body: formData });
     const responseText = await response.text();
     return JSON.parse(responseText);

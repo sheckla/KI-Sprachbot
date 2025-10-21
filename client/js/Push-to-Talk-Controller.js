@@ -16,11 +16,12 @@ let animationFrameId;
 /*****************************
  * Init PTS into Pipeline
  *****************************/
-export async function initPushToTalk() {
+export async function togglePushToTalk() {
   if (state.pipelineBlocked) {return;}
   // already recording -> stop recording
   if (Recorder.isRecording) {
     stopPushToTalk();
+    return;
   }
   await Recorder.start();
   startTimer();
@@ -36,6 +37,7 @@ export async function stopPushToTalk() {
 
   // push recording into file-input!
   const dataTransfer = new DataTransfer();
+  if (!result || !result.file) return;
   dataTransfer.items.add(result.file);
   fileInput.files = dataTransfer.files;
 
