@@ -8,6 +8,7 @@ export class SilenceDetector {
   }
 
   addValue(score) {
+    score = Math.min(Math.max(score, 0.0), 1.0); // clamp between 0.0 and 1.0
     this.buffer.push(score);
     if (this.buffer.length > this.maxFrames) {
       this.buffer.shift();
@@ -33,6 +34,12 @@ export class SilenceDetector {
   fillEmpty() {
     for (let i = 0; i < this.maxFrames; i++) {
       this.addValue(0.0);
+    }
+  }
+
+  fill(value) {
+    for (let i = 0; i < this.maxFrames; i++) {
+      this.addValue(value);
     }
   }
 }

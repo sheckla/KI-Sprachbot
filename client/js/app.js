@@ -37,6 +37,7 @@ const $ = (id) => document.getElementById(id);
 document.addEventListener("DOMContentLoaded", async () => {
   // state init
   let audio = new Audio("./audio/startup.mp3");
+  audio.volume = 0.7;
   await audio.play().catch(() => { });
   state.setPipelineBlocked(false);
 
@@ -65,6 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await wakewordController.loadProcessingModels();
   console.log("AI-Assistant ready to listen!");
   audio = new Audio("./audio/init-complete.mp3");
+  audio.volume = 0.7;
   await audio.play().catch(() => { });
 
   // enable functions
@@ -118,7 +120,9 @@ async function buttonListenForVoiceActivation() {
     async function startRecording() {
       if (state.pipelineBlocked || Recorder.isRecording) return;
       // play start-recording.mp3
+      console.log("start recording!");
       let audio = new Audio("./audio/start-recording.mp3");
+      audio.volume = 0.7;
       await audio.play().catch(() => { });
       silenceDetector.fillEmpty();
       state.pushToTalkCooldown.start();
@@ -131,6 +135,8 @@ async function buttonListenForVoiceActivation() {
     if (state.warmedUp &&
       (vadScore * normalizedDb >= vadThreshold)) {
       await startRecording();
+      console.log(vadThreshold)
+      silenceDetector.fill(vadThreshold);
       state.setWarmedUp(false);
       return;
     }
@@ -138,6 +144,7 @@ async function buttonListenForVoiceActivation() {
     // Start Push-To-Talk via WakeWord + Cooldown
     if ((wakewordScore >= wakewordThreshold)) {
       await startRecording();
+      silenceDetector.fill(vadThreshold);
       return;
     }
   }
@@ -312,6 +319,7 @@ async function startPipeline() {
     return;
   }
   let audio = new Audio("./audio/stop-recording.mp3");
+  audio.volume = 0.7;
   await audio.play().catch(() => { });
   // Prepare run
   state.setPipelineBlocked(true);
