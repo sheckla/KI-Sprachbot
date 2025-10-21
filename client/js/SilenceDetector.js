@@ -1,5 +1,5 @@
 export class SilenceDetector {
-  constructor(silenceDurationMs = 1000, threshold = 0.3) {
+  constructor(silenceDurationMs = 5000, threshold = 0.3) {
     this.silenceDurationMs = silenceDurationMs;
     this.frameDurationMs = 80;
     this.threshold = threshold;
@@ -14,15 +14,11 @@ export class SilenceDetector {
     }
   }
 
-  // TODO mit avg arbeiten weil wenn 1 frame nicht passt => non-fire
   isSilent() {
-    // console.log(this.buffer.length + " " + this.maxFrames)
     if (this.buffer.length < this.maxFrames) {
     return false;
     }
-    console.log(this.getAvg() +  "<" +  this.threshold + "=" + (this.getAvg() < this.threshold))
     return this.getAvg() < this.threshold;
-    // return this.bWuffer.every(value => value < this.threshold);
   }
 
   getAvg() {

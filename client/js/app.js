@@ -16,25 +16,29 @@ import { TwiBotState } from "./TwiBotState.js";
 
 // ===== Fixed Variables =====
 const PUSH_TO_TALK_COOLDOWN_MS = 3000;
+// const HOT_LISTEN_MS = 5000;
 
 // ===== Basic Variables =====
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
 const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
-const silenceDetector = new SilenceDetector(5500, 0.0);
-let scoreChart
+// const hotListenCooldown = new Cooldown(HOT_LISTEN_MS);
+const silenceDetector = new SilenceDetector();
 const fileInput = document.getElementById("file");
-const $ = (id) => document.getElementById(id);
 export const state = new TwiBotState();
+let wakeWordChart
+let readyToListen = true;
+const $ = (id) => document.getElementById(id);
 
 // ===== State Control Init =====
-let readyToListen = true;
-state.setPipelineBlocked(false);
 
 /*************************************************************
  *  Init Application
- *************************************************************/
+*************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
+  // state init
+  state.setPipelineBlocked(false);
+
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));
   updateThresholdSlider($("vad-threshold"));
@@ -43,7 +47,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateAudioInputLabel();
   updateTTSOptions();
   updateModelSelection(document.getElementById("wake-word-model").value);
-  scoreChart = new ScoreChart("scoreChart", 50);
+
+  // init chart
+  wakeWordChart = new ScoreChart("scoreChart", 50);
+  window.addEventListener("resize", () => {
+    if (wakeWordChart && wakeWordChart.chart) {
+      wakeWordChart.chart.resize();
+    }
+  });
 
   // disable some functions until ready
   document.getElementById("start").disabled = true;
@@ -57,13 +68,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
   buttonListenForVoiceActivation();
-
-  window.addEventListener("resize", () => {
-    if (scoreChart && scoreChart.chart) {
-      scoreChart.chart.resize();
-    }
-  });
-
 });
 
 /*****************************
@@ -84,32 +88,50 @@ async function buttonListenForVoiceActivation() {
     silenceDetector.addValue(vadScore);
     silenceDetector.threshold = $("speech-timeout-threshold").value;
 
-    // if (!wakewordScore) wakewordScore = 0.0;
-
-    // updateMeter("vad", vadScore, $("vad-threshold").value);
     updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
-    // updateMeter("wakeword", wakewordScore, $("wakeword-threshold").value);
-    // updateMeter("vad", vadScore, vadThreshold);
     updateMeter("wakeword", wakewordScore, wakewordThreshold);
-    // console.log(wakewordScore);
-    const normalizedDb = Math.min(1, Math.max(0, (db + 60) / 60)); // map -60..0 -> 0..1
+    const normalizedDb = Math.min(1, Math.max(0, (db + 60) / 60)); // [-60, 0] to [0, 1]
     updateMeter("db", normalizedDb);
-    if (scoreChart) {
-      scoreChart.addData(vadScore, wakewordScore);
+    if (wakeWordChart) {
+      wakeWordChart.addData(vadScore, wakewordScore);
     }
 
-    if (Recorder.isRecording) {
-      if (wakewordCooldown.isExpired()) {
-        // console.log(silenceDetector.getAvg().toFixed(3))
-        if (silenceDetector.isSilent()) {
+    // Stop Push-To-Talk if silence detected
+    if (Recorder.isRecording && wakewordCooldown.isExpired() && silenceDetector.isSilent()) {
           await stopPushToTalk();
           readyToListen = true;
-        }
-      }
+    }
+    if (state.pipelineBlocked) return;
 
+    // hot window TTS-Speak + Cooldown
+    if (state.warmedUpCooldown.isExpired() && state.warmedUp) {
+      console.log("setting false from Chunk");
+      state.setWarmedUp(false);
+      state.warmedUpCooldown.reset();
+      document.get
     }
 
-    if (readyToListen && wakewordScore !== null && wakewordScore >= wakewordThreshold && !state.pipelineBlocked) {
+    // Start Speak-To-Talk after System is warmed up
+    if (state.warmedUp && !Recorder.isRecording) {
+      const vadAvg = silenceDetector.getAvg();
+      if (vadAvg >= vadThreshold) {
+        await initPushToTalk();
+        Recorder.isRecording = true;
+        for (let i = 0; i < silenceDetector.maxFrames; i++) {
+          silenceDetector.addValue(1.0); // reset buffer
+        }
+        state.setReadyToListen(false);
+        readyToListen = false;
+        state.setWarmedUp(false);
+      }
+      return;
+    }
+
+
+    // Start Push-To-Talk if WakeWord detected and not in cooldown
+    if (readyToListen &&
+      wakewordScore !== null &&
+      wakewordScore >= wakewordThreshold) {
       if (!Recorder.isRecording) {
         await initPushToTalk();
         Recorder.isRecording = true;
@@ -124,8 +146,6 @@ async function buttonListenForVoiceActivation() {
   }
   Recorder.setOnChunkCallback(processAudioChunk);
 }
-
-
 
 /*****************************
  *  Audio-File WakeWord Init
@@ -300,6 +320,21 @@ async function startPipeline() {
   let text = document.getElementById("final-text");
   text.text = "(transkribiert...)";
   responseTimes.push((await startSTT()).responseTimes);
+
+  // Check Transcription for break commands!
+  let sttText = document.getElementById("stt-text").textContent.toLowerCase();
+  // sttText = "stop";
+  const stopSigns = ["stop", "stopp"];
+  for (const sign of stopSigns) {
+    if (sttText.includes(sign)) {
+      state.setPipelineBlocked(false);
+      clearAll();
+      document.getElementById("llm-question").value = "";
+      return;
+    }
+  }
+
+
   text.text = "(wartet auf Anwort...)";
   responseTimes.push((await startLLM()).responseTimes);
   text.text = "(generiert Sprache...)";
@@ -320,6 +355,21 @@ async function startPipeline() {
   let wrapper = buildResponseWrapper(finalResponseTime, " s");
   document.getElementById("final-text").appendChild(wrapper);
   state.setPipelineBlocked(false);
+  console.log("Pipeline finished!");
+
+  // start hot listen window
+  state.setWarmedUp(true);
+  state.warmedUpCooldown.reset();
+  const player = document.getElementById("ttsPlayer");
+  player.onended = () => {
+    console.log("onend!");
+    state.warmedUpCooldown.start();
+    // dann ab hier den cooldown abwarten bis system wieder kalt wird!
+  };
+}
+
+async function restartRunningPipeline() {
+
 }
 
 /*****************************
@@ -361,7 +411,6 @@ function clearAll() {
   clearTTS();
   document.getElementById("final-wrapper").classList.remove("processing");
   document.getElementById("final-wrapper").classList.remove("success");
-  // document.getElementById("loading").textContent = "(hier wird die Antwort stehen)";
 }
 
 /*************************************************************
@@ -374,7 +423,6 @@ function clearAll() {
  *****************************/
 function wakeWordDetected() {
   console.log("WakeWord detected!");
-  // document.getElementById("status").innerText = "Wakeword erkannt!";
   document.getElementById("push-to-talk-begin").disabled = false;
   document.getElementById("push-to-talk-begin").focus();
   document.getElementById("push-to-talk-begin").click();
@@ -385,9 +433,7 @@ function wakeWordDetected() {
  *****************************/
 function buildResponseWrapper(data, suffix = "") {
   const wrapper = document.createElement("div");
-
   if (data === null) return wrapper;
-
   Object.entries(data).forEach(([key, value]) => {
     const line = document.createElement("a");
     line.textContent = key + ": " + value + suffix;
@@ -474,7 +520,7 @@ function updateMeter(id, value, activateAt = 0.5) {
  *  Push to Talk Via Spacebar
  *****************************/
 document.getElementById("push-to-talk-begin").addEventListener("keydown", (event) => {
-  if (event.key === " " || event.key === "Spacebar") { // " " für moderne Browser, "Spacebar" für ältere
+  if (event.key === " " || event.key === "Spacebar") {
     event.preventDefault();
     // initPushToTalk()
   }

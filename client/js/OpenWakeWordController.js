@@ -182,7 +182,7 @@ export class OpenWakeWordController {
         const wwIn = new ort.Tensor("float32", flatEmb, [1, 16, 96]);
         const wwOut = await this.wakewordSession.run({ [this.wakewordSession.inputNames[0]]: wwIn });
         const score = wwOut[this.wakewordSession.outputNames[0]].data[0];
-        console.log(score);
+        // console.log(score);
         return score;
     }
 }

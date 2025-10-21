@@ -9,7 +9,7 @@
   --color-accent-hover: #5746d8;
   --color-danger: #e57373;
   --color-danger-hover: #d32f2f;
-
+  --color-yellow: #e8ae58;
   --radius: 12px;
   --spacing: 12px;
   --font-main: "Assistant", sans-serif;
@@ -207,6 +207,12 @@ a {
   box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
   color: #fff;
   transform: scale(1.05);
+}
+
+.push-to-talk-standby {
+  background: var(--color-yellow) !important;
+  box-shadow: 0 0 20px rgba(247, 252, 93, 0.5) !important;
+  transform: scale(1.02) !important;
 }
 
 /* Meter */
