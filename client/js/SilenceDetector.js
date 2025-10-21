@@ -29,4 +29,10 @@ export class SilenceDetector {
     val /= this.buffer.length;
     return val;
   }
+
+  fillEmpty() {
+    for (let i = 0; i < this.maxFrames; i++) {
+      this.addValue(0.0);
+    }
+  }
 }

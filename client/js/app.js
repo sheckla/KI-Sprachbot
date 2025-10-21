@@ -16,21 +16,20 @@ import { TwiBotState } from "./TwiBotState.js";
 
 // ===== Fixed Variables =====
 const PUSH_TO_TALK_COOLDOWN_MS = 3000;
-// const HOT_LISTEN_MS = 5000;
 
 // ===== Basic Variables =====
+export const state = new TwiBotState();
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
 const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
-// const hotListenCooldown = new Cooldown(HOT_LISTEN_MS);
 const silenceDetector = new SilenceDetector();
+
+
+// ===== HTML Elems =====
 const fileInput = document.getElementById("file");
-export const state = new TwiBotState();
 let wakeWordChart
-let readyToListen = true;
 const $ = (id) => document.getElementById(id);
 
-// ===== State Control Init =====
 
 /*************************************************************
  *  Init Application
@@ -88,18 +87,19 @@ async function buttonListenForVoiceActivation() {
     silenceDetector.addValue(vadScore);
     silenceDetector.threshold = $("speech-timeout-threshold").value;
 
+    const normalizedDb = Math.min(1, Math.max(0, (db + 60) / 60)); // [-60, 0] to [0, 1]
     updateMeter("vad", silenceDetector.getAvg(), silenceDetector.threshold);
     updateMeter("wakeword", wakewordScore, wakewordThreshold);
-    const normalizedDb = Math.min(1, Math.max(0, (db + 60) / 60)); // [-60, 0] to [0, 1]
     updateMeter("db", normalizedDb);
     if (wakeWordChart) {
       wakeWordChart.addData(vadScore, wakewordScore);
     }
 
     // Stop Push-To-Talk if silence detected
-    if (Recorder.isRecording && wakewordCooldown.isExpired() && silenceDetector.isSilent()) {
-          await stopPushToTalk();
-          readyToListen = true;
+    // if (Recorder.isRecording && wakewordCooldown.isExpired() && silenceDetector.isSilent()) {
+    if (Recorder.isRecording  && silenceDetector.isSilent()) {
+      await stopPushToTalk();
+      state.setReadyToListen(true);
     }
     if (state.pipelineBlocked) return;
 
@@ -111,37 +111,25 @@ async function buttonListenForVoiceActivation() {
       document.get
     }
 
-    // Start Speak-To-Talk after System is warmed up
-    if (state.warmedUp && !Recorder.isRecording) {
-      const vadAvg = silenceDetector.getAvg();
-      if (vadAvg >= vadThreshold) {
-        await initPushToTalk();
-        Recorder.isRecording = true;
-        for (let i = 0; i < silenceDetector.maxFrames; i++) {
-          silenceDetector.addValue(1.0); // reset buffer
-        }
-        state.setReadyToListen(false);
-        readyToListen = false;
-        state.setWarmedUp(false);
-      }
+    if (Recorder.isRecording) return;
+
+    // Start Push-to-Talk if System warmed up via VAD
+    if (state.warmedUp && (vadScore >= vadThreshold)) {
+      await initPushToTalk();
+      Recorder.isRecording = true;
+      silenceDetector.fillEmpty();
+      state.setReadyToListen(false);
+      state.setWarmedUp(false);
       return;
     }
 
-
-    // Start Push-To-Talk if WakeWord detected and not in cooldown
-    if (readyToListen &&
-      wakewordScore !== null &&
-      wakewordScore >= wakewordThreshold) {
-      if (!Recorder.isRecording) {
-        await initPushToTalk();
-        Recorder.isRecording = true;
-        wakewordCooldown.start(); // Cooldown läuft ab jetzt
-        for (let i = 0; i < silenceDetector.maxFrames; i++) {
-          silenceDetector.addValue(1.0); // reset buffer
-        }
-        state.setReadyToListen(false);
-        readyToListen = false;
-      }
+    // Start Push-To-Talk via WakeWord + Cooldown
+    if (state.readyToListen && (wakewordScore >= wakewordThreshold)) {
+      await initPushToTalk();
+      Recorder.isRecording = true;
+      silenceDetector.fillEmpty();
+      // wakewordCooldown.start(); // Cooldown läuft ab jetzt
+      state.setReadyToListen(false);
     }
   }
   Recorder.setOnChunkCallback(processAudioChunk);
@@ -368,9 +356,6 @@ async function startPipeline() {
   };
 }
 
-async function restartRunningPipeline() {
-
-}
 
 /*****************************
  *  Button handlers
