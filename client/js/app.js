@@ -30,15 +30,23 @@ const fileInput = document.getElementById("file");
 let wakeWordChart
 const $ = (id) => document.getElementById(id);
 
+function playAudio(src, volume = 1.0) {
+  const audio = new Audio(src);
+  // audio.volume = volume;
+  audio.play().then(() => {
+    audio.volume = volume;
+  });
+}
 
 /*************************************************************
  *  Init Application
 *************************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
   // state init
-  let audio = new Audio("./audio/startup.mp3");
-  audio.volume = 0.7;
-  await audio.play().catch(() => { });
+  playAudio("./audio/startup.mp3", 0.5);
+  // let audio = new Audio("./audio/startup.mp3");
+  // audio.volume = 0.7;
+  // await audio.play().catch(() => { });
   state.setPipelineBlocked(false);
 
   // initial UI update
@@ -65,9 +73,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // load OpenWakeWord
   await wakewordController.loadProcessingModels();
   console.log("AI-Assistant ready to listen!");
-  audio = new Audio("./audio/init-complete.mp3");
-  audio.volume = 0.7;
-  await audio.play().catch(() => { });
+  playAudio("./audio/init-complete.mp3", 0.5);
+  // audio = new Audio("./audio/init-complete.mp3");
+  // audio.volume = 0.7;
+  // await audio.play().catch(() => { });
 
   // enable functions
   document.getElementById("start").disabled = false;
@@ -121,9 +130,13 @@ async function buttonListenForVoiceActivation() {
       if (state.pipelineBlocked || Recorder.isRecording) return;
       // play start-recording.mp3
       console.log("start recording!");
-      let audio = new Audio("./audio/start-recording.mp3");
-      audio.volume = 0.7;
-      await audio.play().catch(() => { });
+      playAudio("./audio/start-recording.mp3", 0.4);
+      // let audio = new Audio("./audio/start-recording.mp3");
+      // audio.play().then(() => {
+        // audio.volume = 0.4
+      // });
+      // audio.volume = 0.1;
+      // await audio.play().catch(() => { });
       silenceDetector.fillEmpty();
       state.pushToTalkCooldown.start();
       await togglePushToTalk();
@@ -318,9 +331,10 @@ async function startPipeline() {
     console.log("Pipeline is blocked!");
     return;
   }
-  let audio = new Audio("./audio/stop-recording.mp3");
-  audio.volume = 0.7;
-  await audio.play().catch(() => { });
+  // let audio = new Audio("./audio/stop-recording.mp3");
+  // audio.volume = 0.7;
+  // await audio.play().catch(() => { });
+  playAudio("./audio/stop-recording.mp3", 0.5);
   // Prepare run
   state.setPipelineBlocked(true);
   clearAll();
