@@ -13,8 +13,8 @@ export class LEDController {
     this.baseUrl = baseUrl;
     this.currentColor = { r: 0, g: 0, b: 0 };
     this.targetColor = { r: 0, g: 0, b: 0 };
-    this.animDuration = 500; // 0.5 s smooth transition
-    this.animSteps = 20;
+    this.animDuration = 100; // 0.5 s smooth transition
+    this.animSteps = 3;
   }
 
   /*****************************
@@ -39,6 +39,8 @@ export class LEDController {
    *****************************/
   async setColor(r, g, b) {
     this.targetColor = { r, g, b };
+    //this.sendColor(r,g,b);
+    //return;
     const start = { ...this.currentColor };
     const steps = this.animSteps;
     const delay = this.animDuration / steps;
