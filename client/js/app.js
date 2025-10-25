@@ -47,7 +47,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // state init
   playAudio("./audio/startup.mp3", 0.5);
   state.setPipelineBlocked(false);
-  ledController.randomColor();
+      const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    await ledController.setColor(r, g, b);
+  // ledController.randomColor();
 
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));
