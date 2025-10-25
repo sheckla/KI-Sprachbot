@@ -13,6 +13,7 @@ import { Recorder } from "./MediaRecorder.js";
 import { togglePushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
 import { TwiBotState } from "./TwiBotState.js";
+import LEDController, { LedController } from "./LedController.js";
 
 // ===== Fixed Variables =====
 const PUSH_TO_TALK_COOLDOWN_MS = 3000;
@@ -21,6 +22,7 @@ const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 export const state = new TwiBotState();
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
+const ledController = new LedController();
 // const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
 const silenceDetector = new SilenceDetector();
 
@@ -44,10 +46,8 @@ function playAudio(src, volume = 1.0) {
 document.addEventListener("DOMContentLoaded", async () => {
   // state init
   playAudio("./audio/startup.mp3", 0.5);
-  // let audio = new Audio("./audio/startup.mp3");
-  // audio.volume = 0.7;
-  // await audio.play().catch(() => { });
   state.setPipelineBlocked(false);
+  ledController.randomColor();
 
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));
