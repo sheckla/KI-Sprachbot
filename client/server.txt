@@ -1,0 +1,32 @@
+from flask import Flask, request, jsonify
+from rpi5_ws2812.ws2812 import Color, WS2812SpiDriver
+
+# LED Setup
+strip = WS2812SpiDriver(spi_bus=0, spi_device=0, led_count=60).get_strip()
+
+# Flask Setup
+app = Flask(__name__)
+
+@app.route("/color", methods=["GET"])
+def set_color():
+    try:
+        # RGB Parameter aus Query
+        r = int(request.args.get("r", 0))
+        g = int(request.args.get("g", 0))
+        b = int(request.args.get("b", 0))
+
+        # Begrenzung (0–255)
+        r, g, b = [max(0, min(x, 255)) for x in (r, g, b)]
+
+        # LEDs setzen
+        strip.set_all_pixels(Color(r, g, b))
+        strip.show()
+
+        return jsonify({"status": "ok", "r": r, "g": g, "b": b})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+if __name__ == "__main__":
+    print("🚀 LED-Server läuft auf http://0.0.0.0:5000/color?r=255&g=0&b=0")
+    app.run(host="0.0.0.0", port=5000)
