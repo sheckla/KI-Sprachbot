@@ -5,6 +5,28 @@
  * - handles UI-Updates
  *  17.09.2025 Daniel Graf
  *****************************/
+
+function setLoading() {
+  ledController.setColor(50, 50, 50); // orange
+}
+
+function setReady() {
+  ledController.setColor(0, 255, 0); // green
+}
+
+function setNotAvailable() {
+  ledController.setColor(22, 22, 22); // red
+}
+
+function setPushToTalkActive() {
+  ledController.setColor(255, 0, 0);
+}
+
+function setInterruptable() {
+  // orange
+  ledController.setColor(255, 140, 0);
+}
+
 import { OpenWakeWordController } from "./OpenWakeWordController.js";
 import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
@@ -47,10 +69,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // state init
   playAudio("./audio/startup.mp3", 0.5);
   state.setPipelineBlocked(false);
-      const r = Math.floor(Math.random() * 256);
-    const g = Math.floor(Math.random() * 256);
-    const b = Math.floor(Math.random() * 256);
-    await ledController.instantColor(r, g, b);
+      // const r = Math.floor(Math.random() * 256);
+    // const g = Math.floor(Math.random() * 256);
+    // const b = Math.floor(Math.random() * 256);
+    // await ledController.instantColor(r, g, b);
+    setLoading();
   // ledController.randomColor();
 
   // initial UI update
@@ -135,6 +158,7 @@ async function buttonListenForVoiceActivation() {
       // play start-recording.mp3
       console.log("start recording!");
       playAudio("./audio/start-recording.mp3", 0.4);
+      setPushToTalkActive();
       // let audio = new Audio("./audio/start-recording.mp3");
       // audio.play().then(() => {
         // audio.volume = 0.4
