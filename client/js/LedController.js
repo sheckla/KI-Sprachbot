@@ -1,5 +1,5 @@
-export default class LEDController {
-  constructor(baseUrl = "http://raspberrypi.local:5000") {
+export class LEDController {
+  constructor(baseUrl = "raspberrypi.local:5000") {
     this.baseUrl = baseUrl;
     this.currentColor = { r: 0, g: 0, b: 0 };
     this.targetColor = { r: 0, g: 0, b: 0 };
@@ -9,6 +9,7 @@ export default class LEDController {
 
   async sendColor(r, g, b) {
     const url = `${this.baseUrl}/color?r=${r}&g=${g}&b=${b}`;
+    console.log(url);
     try {
       const res = await fetch(url);
       const data = await res.json();

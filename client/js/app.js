@@ -13,7 +13,7 @@ import { Recorder } from "./MediaRecorder.js";
 import { togglePushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
 import { TwiBotState } from "./TwiBotState.js";
-import LEDController, { LedController } from "./LedController.js";
+import { LEDController } from "./LedController.js";
 
 // ===== Fixed Variables =====
 const PUSH_TO_TALK_COOLDOWN_MS = 3000;
@@ -22,7 +22,7 @@ const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 export const state = new TwiBotState();
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
-const ledController = new LedController();
+const ledController = new LEDController();
 // const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
 const silenceDetector = new SilenceDetector();
 
