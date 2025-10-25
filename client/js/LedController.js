@@ -6,7 +6,7 @@
  *****************************/
 
 // const BASE_URL = "http://192.168.112.151:5000"; // Pi API Endpoint
-const BASE_URL = "http://10.97.9.112:5000"; // Pi API Endpoint
+const BASE_URL = "https://localhost:5000"; // Pi API Endpoint
 
 export class LEDController {
   constructor(baseUrl = BASE_URL) {

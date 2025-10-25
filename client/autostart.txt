@@ -15,6 +15,37 @@ if [ -n "$PROFILE_PATH" ]; then
 fi
 /usr/bin/firefox-esr "$CLIENT_URL" &
 
+
+
+
+////
+#!/bin/bash
+
+# kurze Pause, z.B. für Autostart-Szenarien
+sleep 2
+
+# optional: WLAN verbinden (auskommentiert wenn nicht benötigt)
+# nmcli dev wifi connect "SSID" password "PASSWORT"
+
+
+
+
+# ---- Chromium (empfohlen auf Raspberry Pi) ----
+chromium-browser \
+  --no-sandbox \
+  --noerrdialogs \
+  --autoplay-policy=no-user-gesture-required \
+  --use-fake-ui-for-media-stream \
+  --enable-experimental-web-platform-features \
+  --enable-features=AudioServiceOutOfProcess \
+  --disable-web-security \
+  --disable-features=BlockInsecurePrivateNetworkRequests \
+  --ignore-certificate-errors \
+  --password-store=basic \
+  --user-data-dir="$DEV_PROFILE" \
+   https://one.beezlebug.com/ki-sprachbot/client/
+////
+
 [Unit]
 Description=Autostart Script
 After=network-online.target
