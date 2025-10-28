@@ -9,7 +9,7 @@ import { OpenWakeWordController } from "./OpenWakeWordController.js";
 import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Recorder } from "./MediaRecorder.js";
-import { togglePushToTalk} from "./Push-to-Talk-Controller.js";
+import { togglePushToTalk } from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
 import { TwiBotState } from "./TwiBotState.js";
 import { LEDController } from "./LedController.js";
@@ -116,11 +116,11 @@ async function buttonListenForVoiceActivation() {
     // ===== already busy or blocked =====
     if (state.pipelineBlocked || Recorder.isRecording) return;
 
-    async function startRecording() {
+    async function startRecording(v = 0.4) {
       if (state.pipelineBlocked || Recorder.isRecording) return;
       // play start-recording.mp3
       console.log("start recording!");
-      playAudio("./audio/start-recording.mp3", 0.4);
+      playAudio("./audio/start-recording.mp3", v);
       setLedRecording();
       silenceDetector.fillEmpty();
       state.pushToTalkCooldown.start();
@@ -132,7 +132,7 @@ async function buttonListenForVoiceActivation() {
     // take normalizedDB  and vadScore into account
     if (state.warmedUp &&
       (vadScore * normalizedDb >= vadThreshold)) {
-      await startRecording();
+      await startRecording(0.1);
       console.log(vadThreshold)
       silenceDetector.fill(vadThreshold);
       state.setWarmedUp(false);
@@ -326,29 +326,18 @@ async function startPipeline() {
   let responseTimes = [];
   let text = document.getElementById("final-text");
   text.text = "(transkribiert...)";
+  let response = await startEmotionSTT();
+  // responseTimes.push(response.responseTimes);
   responseTimes.push((await startSTT()).responseTimes);
-
-  // Check Transcription for break commands!
   let sttText = document.getElementById("stt-text").textContent.toLowerCase();
-  // sttText = "stop";
-  const stopSigns = ["stop", "stopp"];
-  for (const sign of stopSigns) {
-    if (sttText.includes(sign)) {
-      state.setPipelineBlocked(false);
-      clearAll();
-      document.getElementById("llm-question").value = "";
-      setLedReady();
-      return;
-    }
-    // TODO Demenz erkennen / kontext reset
-    const demenzSign = "kontext löschen";
-    if (sttText.includes(demenzSign)) {
-      beezlebugApi.conversation = "";
-      document.getElementById("conversation").textContent = " none";
-    }
+  if (checkForCommandsInTranscription(sttText)) {
+    stopLedProcessing();
+    clearAll();
+    document.getElementById("llm-question").value = "";
+    state.setPipelineBlocked(false);
+    setLedReady();
+    return;
   }
-
-  // TODO TTS Option (Piper, Thorsten, XTTS)
 
   text.text = "(wartet auf Anwort...)";
   responseTimes.push((await startLLM()).responseTimes);
@@ -382,6 +371,45 @@ async function startPipeline() {
     console.log("onend!");
     state.warmedUpCooldown.start();
   };
+}
+
+function checkForCommandsInTranscription(text) {
+  text = text.toLowerCase();
+  // text = "setze stimme zu piper hahaha!!";
+
+  //check STOP
+  const stopSigns = ["stop", "stopp", "abbrechen"];
+  for (const sign of stopSigns) {
+    if (text.includes(sign)) {
+      console.log("command stop!");
+      return true;
+    }
+  }
+
+  // check conversation-memory reset
+  const resetSigns = ["neustarten", "neustart"];
+  if (text.includes(resetSigns)) {
+    beezlebugApi.conversation = "";
+    document.getElementById("conversation").textContent = " none";
+    return true;
+  }
+
+  const setTTSSigns = ["setze stimme", "ändere stimme", "wechsel stimme"];
+  const ttsOptions = ["piper", "thorsten", "gitta"];
+  for (const sign of setTTSSigns) {
+    if (text.includes(sign)) {
+      for (const option of ttsOptions) {
+        if (text.includes(option)) {
+          document.getElementById("tts-type").value = option;
+          updateTTSOptions();
+          console.log("command set tts to " + option);
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 
@@ -489,7 +517,7 @@ function setLedReady() {
 }
 
 function setLedRecording() {
-  ledController.setColor(128,0,128);
+  ledController.setColor(128, 0, 128);
 }
 
 function setLedProcessing() {

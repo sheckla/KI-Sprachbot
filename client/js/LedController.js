@@ -23,7 +23,7 @@ export class LEDController {
     const url = this.baseUrl + "/color?r=" + r + "&g=" + g + "&b=" + b;
     const elem = document.getElementById("led-indicator");
     if (elem) {
-      console.log("setting color", r, g, b);
+      // console.log("setting color", r, g, b);
       elem.style.background = "rgb(" + r + ", " + g + ", " + b + ")";
       elem.style.boxshadoe = "0 0 12px rgb(" + r + ", " + g + ", " + b + ")";
     }
