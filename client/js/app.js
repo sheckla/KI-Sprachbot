@@ -66,12 +66,13 @@ function playAudio(src, volume = 1.0) {
 document.addEventListener("DOMContentLoaded", async () => {
   // state init
   playAudio("./audio/startup.mp3", 0.5);
+  ledController.setColor(20,20,20);
   state.setPipelineBlocked(false);
       // const r = Math.floor(Math.random() * 256);
     // const g = Math.floor(Math.random() * 256);
     // const b = Math.floor(Math.random() * 256);
     // await ledController.instantColor(r, g, b);
-    setLoading();
+  //  setLoading();
   // ledController.randomColor();
 
   // initial UI update
@@ -99,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await wakewordController.loadProcessingModels();
   console.log("AI-Assistant ready to listen!");
   playAudio("./audio/init-complete.mp3", 0.5);
+  ledController.setColor(0, 255, 0);
   // audio = new Audio("./audio/init-complete.mp3");
   // audio.volume = 0.7;
   // await audio.play().catch(() => { });
@@ -146,6 +148,7 @@ async function buttonListenForVoiceActivation() {
       console.log("setting false from Chunk");
       state.setWarmedUp(false);
       state.warmedUpCooldown.reset();
+      ledController.setColor(0, 255, 0);
     }
 
     // ===== already busy or blocked =====
@@ -357,6 +360,7 @@ async function startPipeline() {
     console.log("Pipeline is blocked!");
     return;
   }
+  ledController.setColor(10,10,10);
   // let audio = new Audio("./audio/stop-recording.mp3");
   // audio.volume = 0.7;
   // await audio.play().catch(() => { });
@@ -381,6 +385,7 @@ async function startPipeline() {
       state.setPipelineBlocked(false);
       clearAll();
       document.getElementById("llm-question").value = "";
+      ledController.setColor(0, 255, 0);
       return;
     }
     // TODO Demenz erkennen / kontext reset
@@ -399,8 +404,10 @@ async function startPipeline() {
 
   text.text = "(wartet auf Anwort...)";
   responseTimes.push((await startLLM()).responseTimes);
+  ledController.setColor(10,70,10);
   text.text = "(generiert Sprache...)";
   responseTimes.push((await startTTS()).responseTimes);
+  //ledController.setColor(10,50,10);
 
   let finalResponseTime = { server: 0, network: 0, total: 0 };
   for (const { server, network, total } of responseTimes) {
@@ -421,6 +428,7 @@ async function startPipeline() {
 
   // start hot listen window
   state.setWarmedUp(true);
+  setInterruptable();
   state.warmedUpCooldown.reset();
   const player = document.getElementById("ttsPlayer");
   player.onended = () => {
