@@ -4,7 +4,7 @@
  *****************************/
 import { Cooldown } from "./Cooldown.js";
 
-const HOT_LISTEN_MS = 5000;
+const HOT_LISTEN_MS = 12500; // Changed from 5secs to 12,5secs to give user more time to continue talking
 const PUSH_TO_TALK_COOLDOWN_MS = 5000;
 export class TwiBotState {
     warmedUpCooldown = new Cooldown(HOT_LISTEN_MS);

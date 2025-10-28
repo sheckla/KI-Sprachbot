@@ -30,7 +30,6 @@ function setInterruptable() {
 import { OpenWakeWordController } from "./OpenWakeWordController.js";
 import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
-import { Cooldown } from "./Cooldown.js";
 import { Recorder } from "./MediaRecorder.js";
 import { togglePushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
@@ -38,7 +37,6 @@ import { TwiBotState } from "./TwiBotState.js";
 import { LEDController } from "./LedController.js";
 
 // ===== Fixed Variables =====
-const PUSH_TO_TALK_COOLDOWN_MS = 3000;
 
 // ===== Basic Variables =====
 export const state = new TwiBotState();
@@ -94,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // disable some functions until ready
-  document.getElementById("start").disabled = true;
+  // document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
 
   // load OpenWakeWord
@@ -106,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // await audio.play().catch(() => { });
 
   // enable functions
-  document.getElementById("start").disabled = false;
+  // document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
   buttonListenForVoiceActivation();
 });
@@ -385,8 +383,19 @@ async function startPipeline() {
       document.getElementById("llm-question").value = "";
       return;
     }
+    // TODO Demenz erkennen / kontext reset
+    const demenzSign = "kontext löschen";
+    if (sttText.includes(demenzSign)) {
+      beezlebugApi.conversation = "";
+      document.getElementById("conversation").textContent = " none";
+      //state.setPipelineBlocked(false);
+      //clearAll();
+      //document.getElementById("llm-question").value = "";
+      //return;
+    }
   }
 
+  // TODO TTS Option (Piper, Thorsten, XTTS)
 
   text.text = "(wartet auf Anwort...)";
   responseTimes.push((await startLLM()).responseTimes);
