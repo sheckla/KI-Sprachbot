@@ -255,6 +255,16 @@ a {
   box-shadow: 0 0 12px rgba(109, 93, 252, 0.5);
 }
 
+.led-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: gray;
+  margin-bottom: 12px;
+  /* box-shadow: 0 0 8px rgba(128, 128, 128, 0.5); */
+  /* transition: background 0.3s, box-shadow 0.3s; */
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }

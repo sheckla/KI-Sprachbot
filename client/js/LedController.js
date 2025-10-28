@@ -13,23 +13,28 @@ export class LEDController {
     this.baseUrl = baseUrl;
     this.currentColor = { r: 0, g: 0, b: 0 };
     this.targetColor = { r: 0, g: 0, b: 0 };
-    this.animDuration = 100; // 0.5 s smooth transition
-    this.animSteps = 3;
+    this.isPulsing = false;
   }
 
   /*****************************
    * Send RGB Color to Raspberry Pi LED API
    *****************************/
   async sendColor(r, g, b) {
-    const url = `${this.baseUrl}/color?r=${r}&g=${g}&b=${b}`;
-    console.log("[LEDController] →", url);
+    const url = this.baseUrl + "/color?r=" + r + "&g=" + g + "&b=" + b;
+    const elem = document.getElementById("led-indicator");
+    if (elem) {
+      console.log("setting color", r, g, b);
+      elem.style.background = "rgb(" + r + ", " + g + ", " + b + ")";
+      elem.style.boxshadoe = "0 0 12px rgb(" + r + ", " + g + ", " + b + ")";
+    }
+    return;
     try {
       const res = await fetch(url);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "LED Request failed");
+      // if (!res.ok) throw new Error(data.message || "LED Request failed");
       return data;
     } catch (err) {
-      console.error("[LEDController] Fetch Error:", err);
+      // console.error("[LEDController] Fetch Error:", err);
       return { status: "error", message: err.message };
     }
   }
@@ -38,25 +43,24 @@ export class LEDController {
    * Set Color with Smooth Transition
    *****************************/
   async setColor(r, g, b) {
-    this.targetColor = { r, g, b };
-    //this.sendColor(r,g,b);
-    //return;
     const start = { ...this.currentColor };
-    const steps = this.animSteps;
-    const delay = this.animDuration / steps;
+    const delay = 300 / 3;
 
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const ir = Math.round(start.r + (r - start.r) * t);
-      const ig = Math.round(start.g + (g - start.g) * t);
-      const ib = Math.round(start.b + (b - start.b) * t);
+    const steps = [
+      { t: 0.33 },
+      { t: 0.66 },
+      { t: 1.0 },
+    ];
 
+    for (const step of steps) {
+      const ir = Math.round(start.r + (r - start.r) * step.t);
+      const ig = Math.round(start.g + (g - start.g) * step.t);
+      const ib = Math.round(start.b + (b - start.b) * step.t);
       await this.sendColor(ir, ig, ib);
       await new Promise(res => setTimeout(res, delay));
     }
 
     this.currentColor = { r, g, b };
-    console.log(`[LEDController] ✅ Color set to (${r}, ${g}, ${b})`);
   }
 
   /*****************************
@@ -67,6 +71,7 @@ export class LEDController {
     await this.sendColor(r, g, b);
   }
 
+
   /*****************************
    * Random Color Helper
    *****************************/
@@ -76,4 +81,34 @@ export class LEDController {
     const b = Math.floor(Math.random() * 256);
     await this.setColor(r, g, b);
   }
+
+/*****************************
+ * Pulse Effect
+ *****************************/
+async startPulse(r, g, b, speed = 2000) {
+  if (this.isPulsing) this.stopPulse(); // Already pulsing
+  this.isPulsing = true;
+  this.currentColor = { r, g, b };
+
+  while (this.isPulsing) {
+    if (!this.isPulsing) break;
+    await this.setColor(r, g, b);
+    if (!this.isPulsing) break;
+    await new Promise(res => setTimeout(res, speed / 2));
+    if (!this.isPulsing) break;
+
+    await this.setColor(r / 3, g / 3, b / 3);
+    if (!this.isPulsing) break;
+    await new Promise(res => setTimeout(res, speed / 2));
+    if (!this.isPulsing) break;
+  }
+}
+
+/*****************************
+ * Stop Pulse Effect
+ *****************************/
+stopPulse() {
+  this.isPulsing = false;
+}
+
 }

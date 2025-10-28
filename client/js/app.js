@@ -5,47 +5,21 @@
  * - handles UI-Updates
  *  17.09.2025 Daniel Graf
  *****************************/
-
-function setLoading() {
-  ledController.setColor(50, 50, 50); // orange
-}
-
-function setReady() {
-  ledController.setColor(0, 255, 0); // green
-}
-
-function setNotAvailable() {
-  ledController.setColor(22, 22, 22); // red
-}
-
-function setPushToTalkActive() {
-  ledController.setColor(255, 0, 0);
-}
-
-function setInterruptable() {
-  // orange
-  ledController.setColor(255, 140, 0);
-}
-
 import { OpenWakeWordController } from "./OpenWakeWordController.js";
 import { PipelineController } from "./PipelineController.js";
 import { SilenceDetector } from "./SilenceDetector.js";
 import { Recorder } from "./MediaRecorder.js";
-import { togglePushToTalk, stopPushToTalk } from "./Push-to-Talk-Controller.js";
+import { togglePushToTalk} from "./Push-to-Talk-Controller.js";
 import { ScoreChart } from "./ScoreChart.js";
 import { TwiBotState } from "./TwiBotState.js";
 import { LEDController } from "./LedController.js";
-
-// ===== Fixed Variables =====
 
 // ===== Basic Variables =====
 export const state = new TwiBotState();
 const pipelineController = new PipelineController();
 const wakewordController = new OpenWakeWordController();
 const ledController = new LEDController();
-// const wakewordCooldown = new Cooldown(PUSH_TO_TALK_COOLDOWN_MS);
 const silenceDetector = new SilenceDetector();
-
 
 // ===== HTML Elems =====
 const fileInput = document.getElementById("file");
@@ -54,7 +28,6 @@ const $ = (id) => document.getElementById(id);
 
 function playAudio(src, volume = 1.0) {
   const audio = new Audio(src);
-  // audio.volume = volume;
   audio.play().then(() => {
     audio.volume = volume;
   });
@@ -66,14 +39,8 @@ function playAudio(src, volume = 1.0) {
 document.addEventListener("DOMContentLoaded", async () => {
   // state init
   playAudio("./audio/startup.mp3", 0.5);
-  ledController.setColor(20,20,20);
+  setLedLoading();
   state.setPipelineBlocked(false);
-      // const r = Math.floor(Math.random() * 256);
-    // const g = Math.floor(Math.random() * 256);
-    // const b = Math.floor(Math.random() * 256);
-    // await ledController.instantColor(r, g, b);
-  //  setLoading();
-  // ledController.randomColor();
 
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));
@@ -93,20 +60,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // disable some functions until ready
-  // document.getElementById("start").disabled = true;
   document.getElementById("start-file").disabled = true;
 
   // load OpenWakeWord
   await wakewordController.loadProcessingModels();
   console.log("AI-Assistant ready to listen!");
   playAudio("./audio/init-complete.mp3", 0.5);
-  ledController.setColor(0, 255, 0);
-  // audio = new Audio("./audio/init-complete.mp3");
-  // audio.volume = 0.7;
-  // await audio.play().catch(() => { });
+  setLedReady();
 
   // enable functions
-  // document.getElementById("start").disabled = false;
   document.getElementById("start-file").disabled = false;
   buttonListenForVoiceActivation();
 });
@@ -148,7 +110,7 @@ async function buttonListenForVoiceActivation() {
       console.log("setting false from Chunk");
       state.setWarmedUp(false);
       state.warmedUpCooldown.reset();
-      ledController.setColor(0, 255, 0);
+      setLedReady();
     }
 
     // ===== already busy or blocked =====
@@ -159,13 +121,7 @@ async function buttonListenForVoiceActivation() {
       // play start-recording.mp3
       console.log("start recording!");
       playAudio("./audio/start-recording.mp3", 0.4);
-      setPushToTalkActive();
-      // let audio = new Audio("./audio/start-recording.mp3");
-      // audio.play().then(() => {
-        // audio.volume = 0.4
-      // });
-      // audio.volume = 0.1;
-      // await audio.play().catch(() => { });
+      setLedRecording();
       silenceDetector.fillEmpty();
       state.pushToTalkCooldown.start();
       await togglePushToTalk();
@@ -338,9 +294,7 @@ async function startTTS() {
 
   const player = document.getElementById("ttsPlayer");
   player.src = result.audio_data_url; // apply audio data
-  // TODO toggle autoplay
   startTTSPlayback();
-  // player.play().catch(() => { });
 
   // update html
   document.getElementById("tts-wrapper").classList.remove("processing");
@@ -360,11 +314,9 @@ async function startPipeline() {
     console.log("Pipeline is blocked!");
     return;
   }
-  ledController.setColor(10,10,10);
-  // let audio = new Audio("./audio/stop-recording.mp3");
-  // audio.volume = 0.7;
-  // await audio.play().catch(() => { });
   playAudio("./audio/stop-recording.mp3", 0.5);
+  setLedProcessing();
+
   // Prepare run
   state.setPipelineBlocked(true);
   clearAll();
@@ -385,7 +337,7 @@ async function startPipeline() {
       state.setPipelineBlocked(false);
       clearAll();
       document.getElementById("llm-question").value = "";
-      ledController.setColor(0, 255, 0);
+      setLedReady();
       return;
     }
     // TODO Demenz erkennen / kontext reset
@@ -393,10 +345,6 @@ async function startPipeline() {
     if (sttText.includes(demenzSign)) {
       beezlebugApi.conversation = "";
       document.getElementById("conversation").textContent = " none";
-      //state.setPipelineBlocked(false);
-      //clearAll();
-      //document.getElementById("llm-question").value = "";
-      //return;
     }
   }
 
@@ -404,10 +352,8 @@ async function startPipeline() {
 
   text.text = "(wartet auf Anwort...)";
   responseTimes.push((await startLLM()).responseTimes);
-  ledController.setColor(10,70,10);
   text.text = "(generiert Sprache...)";
   responseTimes.push((await startTTS()).responseTimes);
-  //ledController.setColor(10,50,10);
 
   let finalResponseTime = { server: 0, network: 0, total: 0 };
   for (const { server, network, total } of responseTimes) {
@@ -428,13 +374,13 @@ async function startPipeline() {
 
   // start hot listen window
   state.setWarmedUp(true);
-  setInterruptable();
+  stopLedProcessing();
+  setLedAnswering();
   state.warmedUpCooldown.reset();
   const player = document.getElementById("ttsPlayer");
   player.onended = () => {
     console.log("onend!");
     state.warmedUpCooldown.start();
-    // dann ab hier den cooldown abwarten bis system wieder kalt wird!
   };
 }
 
@@ -526,10 +472,39 @@ export function stopTTSPlayback() {
     }
     player.volume = Math.max(0.0, player.volume - 0.1);
   }, 100);
-  // player.pause();
-  // player.currentTime = 0;
+}
+/*****************************
+ *  LED-CONTROL Functions
+ *****************************/
+function setLedLoading() {
+  ledController.setColor(20, 20, 20);
 }
 
+function setPurpleLED() {
+  ledController.setColor(128, 0, 128);
+}
+
+function setLedReady() {
+  ledController.setColor(0, 255, 0);
+}
+
+function setLedRecording() {
+  ledController.setColor(128,0,128);
+}
+
+function setLedProcessing() {
+  ledController.startPulse(255, 140, 0);
+}
+
+function stopLedProcessing() {
+  ledController.stopPulse();
+  // ledController.setColor(0, 255, 0);
+}
+
+function setLedAnswering() {
+  // orange
+  ledController.setColor(255, 140, 0);
+}
 
 /*************************************************************
  *  Update Functions
