@@ -329,6 +329,8 @@ async function startPipeline() {
   // let response = await startEmotionSTT();
   // responseTimes.push(response.responseTimes);
   responseTimes.push((await startSTT()).responseTimes);
+  // $("stt-text").textContent = "setze stimme zu 3";
+  $("stt-text").textContent = "neustart";
   let sttText = document.getElementById("stt-text").textContent.toLowerCase();
   if (checkForCommandsInTranscription(sttText)) {
     stopLedProcessing();
@@ -375,7 +377,10 @@ async function startPipeline() {
 
 function checkForCommandsInTranscription(text) {
   text = text.toLowerCase();
-  // text = "setze stimme zu piper hahaha!!";
+  //  text = "setze stimme zu piper hahaha!!";
+  // text = "ändere stimme. zu 1.";
+  // text = "stop";
+  // text = "neustart";
 
   //check STOP
   const stopSigns = ["stop", "stopp", "abbrechen"];
@@ -388,29 +393,37 @@ function checkForCommandsInTranscription(text) {
 
   // check conversation-memory reset
   const resetSigns = ["neustarten", "neustart"];
-  if (text.includes(resetSigns)) {
-    beezlebugApi.conversation = "";
-    document.getElementById("conversation").textContent = " none";
-    return true;
+  for (const sign of resetSigns) {
+    if (text.includes(sign)) {
+      console.log("command reset conversation!");
+      // beezlebugApi.conversation = "";
+      pipelineController.beezlebugAPI.conversationId = "";
+      document.getElementById("conversation").textContent = " none";
+      return true;
+    }
   }
-
-  // TODO fix names !! not working with optionse use switch case
+  const ttsMap = {
+    "1": "piper",
+    "2": "coqui-thorsten",
+    "3": "coqui-xttsv2"
+  };
   const setTTSSigns = ["setze stimme", "ändere stimme", "wechsel stimme"];
-  const ttsOptions = ["piper", "thorsten", "gitta"];
+  const ttsOptions = ["1", "2", "3"];
   for (const sign of setTTSSigns) {
     if (text.includes(sign)) {
-      for (const option of ttsOptions) {
-        if (text.includes(option)) {
-          document.getElementById("tts-type").value = option;
+      for (const [key, value] of Object.entries(ttsMap)) {
+        if (text.includes(value.toLowerCase()) || text.includes(key)) {
+          document.getElementById("tts-type").value = value;
           updateTTSOptions();
-          console.log("command set tts to " + option);
+          console.log("command set tts to " + value);
           return true;
         }
       }
     }
-  }
 
-  return false;
+
+    return false;
+  }
 }
 
 
