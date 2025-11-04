@@ -27,7 +27,7 @@ export class LEDController {
       elem.style.background = "rgb(" + r + ", " + g + ", " + b + ")";
       elem.style.boxshadoe = "0 0 12px rgb(" + r + ", " + g + ", " + b + ")";
     }
-    return;
+    //return;
     try {
       const res = await fetch(url);
       const data = await res.json();
