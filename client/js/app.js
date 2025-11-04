@@ -326,7 +326,7 @@ async function startPipeline() {
   let responseTimes = [];
   let text = document.getElementById("final-text");
   text.text = "(transkribiert...)";
-  let response = await startEmotionSTT();
+  // let response = await startEmotionSTT();
   // responseTimes.push(response.responseTimes);
   responseTimes.push((await startSTT()).responseTimes);
   let sttText = document.getElementById("stt-text").textContent.toLowerCase();
@@ -394,6 +394,7 @@ function checkForCommandsInTranscription(text) {
     return true;
   }
 
+  // TODO fix names !! not working with optionse use switch case
   const setTTSSigns = ["setze stimme", "ändere stimme", "wechsel stimme"];
   const ttsOptions = ["piper", "thorsten", "gitta"];
   for (const sign of setTTSSigns) {
