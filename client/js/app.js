@@ -41,6 +41,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   playAudio("./audio/startup.mp3", 0.5);
   setLedLoading();
   state.setPipelineBlocked(false);
+  let active = URLSearchParams ? new URLSearchParams(window.location.search).get("led") === "true" : false;
+  $("led-indicator").style.display = active ? "block" : "none";
 
   // initial UI update
   updateThresholdSlider($("speech-timeout-threshold"));

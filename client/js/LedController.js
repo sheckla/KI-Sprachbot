@@ -9,17 +9,24 @@
 const BASE_URL = "https://localhost:5000"; // Pi API Endpoint
 
 export class LEDController {
-  constructor(baseUrl = BASE_URL) {
-    this.baseUrl = baseUrl;
+  active = false;
+  constructor() {
+    console.log("hi");
+    this.baseUrl = BASE_URL;
     this.currentColor = { r: 0, g: 0, b: 0 };
     this.targetColor = { r: 0, g: 0, b: 0 };
     this.isPulsing = false;
+    // get url search param
+    let active = URLSearchParams ? new URLSearchParams(window.location.search).get("led") === "true" : false;
+    console.log("LED Controller Active:", active);
+    this.active = active;
   }
 
   /*****************************
    * Send RGB Color to Raspberry Pi LED API
    *****************************/
   async sendColor(r, g, b) {
+    if (!this.active) return;
     const url = this.baseUrl + "/color?r=" + r + "&g=" + g + "&b=" + b;
     const elem = document.getElementById("led-indicator");
     if (elem) {
@@ -43,6 +50,8 @@ export class LEDController {
    * Set Color with Smooth Transition
    *****************************/
   async setColor(r, g, b) {
+    if (!this.active) return;
+
     const start = { ...this.currentColor };
     const delay = 300 / 3;
 
@@ -67,6 +76,8 @@ export class LEDController {
    * Set Color Immediately (no transition)
    *****************************/
   async instantColor(r, g, b) {
+    if (!this.active) return;
+
     this.currentColor = { r, g, b };
     await this.sendColor(r, g, b);
   }
