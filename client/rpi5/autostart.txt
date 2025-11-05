@@ -1,63 +1,14 @@
-# Skript speichern unter /home/pi/autostart.sh
-# chmod +x /home/pi/autostart.sh
-# crontab -e
-#   am Ende hinzufügen: @reboot /home/pi/autostart.sh &
-# neustart: sudo reboot
-
-# Autostart Skript!
 #!/bin/bash
-sleep 10
-CLIENT_URL="https://one.beezlebug.com/ki-sprachbot/client/index.html"
-PROFILE_PATH=$(find /home/pi/.mozilla/firefox -maxdepth 1 -type d -name "*.default-esr" | head -n 1)
-if [ -n "$PROFILE_PATH" ]; then
-  echo 'user_pref("permissions.default.microphone",1);' >> "$PROFILE_PATH/prefs.js"
-  echo 'user_pref("media.navigator.permission.disabled",true);' >> "$PROFILE_PATH/prefs.js"
-fi
-/usr/bin/firefox-esr "$CLIENT_URL" &
-
-
-
-
-////
-#!/bin/bash
-
-# kurze Pause, z.B. für Autostart-Szenarien
-sleep 2
-
-# optional: WLAN verbinden (auskommentiert wenn nicht benötigt)
-# nmcli dev wifi connect "SSID" password "PASSWORT"
-
-
-
-
-# ---- Chromium (empfohlen auf Raspberry Pi) ----
+nmcli dev wifi connect "cybob5" password "cybob"
 chromium-browser \
-  --no-sandbox \
-  --noerrdialogs \
-  --autoplay-policy=no-user-gesture-required \
-  --use-fake-ui-for-media-stream \
-  --enable-experimental-web-platform-features \
-  --enable-features=AudioServiceOutOfProcess \
-  --disable-web-security \
-  --disable-features=BlockInsecurePrivateNetworkRequests \
-  --ignore-certificate-errors \
-  --password-store=basic \
-  --user-data-dir="$DEV_PROFILE" \
-   https://one.beezlebug.com/ki-sprachbot/client/
-////
-
-[Unit]
-Description=Autostart Script
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-ExecStart=/home/cybob/autostart.sh
-User=cybob
-Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/cybob/.Xauthority
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-
+--no-sandbox \
+--autoplay-policy=no-user-gesture-required \
+--use-fake-ui-for-media-stream \
+--enable-experimental-web-platform-features \
+--enable-features=AudioServiceOutOfProcess \
+--disable-web-security \
+--disable-features=BlockInsecurePrivateNetworkRequests \
+--ignore-certificate-errors \
+--password-store=basic \
+--user-data-dir="$DEV_PROFILE" \
+https://one.beezlebug.com/ki-sprachbot/client/?led=true

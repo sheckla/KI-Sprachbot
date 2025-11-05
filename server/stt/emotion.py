@@ -13,9 +13,7 @@ from transformers import pipeline
 try:
     clf = pipeline("audio-classification", model="superb/wav2vec2-base-superb-er", device=-1)
     res = clf(sys.argv[1], top_k=None)
-    # reine JSON-Liste:
     print(json.dumps(res), flush=True)
 except Exception as e:
-    # sauberes Fehlerobjekt
     print(json.dumps({"__error__": str(e)}), flush=True)
     sys.exit(1)

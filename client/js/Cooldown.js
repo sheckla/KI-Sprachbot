@@ -1,3 +1,8 @@
+/*****************************
+ * ===== Simple Cooldown Manager =====
+ * keep track of cooldowns for actions
+ *  05.11.2025 Daniel Graf
+*****************************/
 export class Cooldown {
   constructor(timeoutMs = 1000) {
     this.duration = timeoutMs;

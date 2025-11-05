@@ -11,7 +11,7 @@
 			"name": "STT",
 			"item": [
 				{
-					"name": "Transcribe",
+					"name": "Sprachtranskription",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -20,12 +20,14 @@
 							"formdata": [
 								{
 									"key": "file",
+									"description": "Audio (.wav, .mp3)",
 									"type": "file",
-									"src": "/Users/daniel/Desktop/Projekte/KI-Sprachbot/audios/samples/lena-thorsten-angry.wav"
+									"src": "/Users/daniel/Downloads/hey rhapsi.wav"
 								},
 								{
 									"key": "quality",
 									"value": "large-v3-turbo",
+									"description": "Whisper-Modellname",
 									"type": "text"
 								}
 							]
@@ -43,6 +45,39 @@
 								"server",
 								"stt",
 								"index.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Emotionserkennung",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/daniel/Downloads/fliege.wav"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://one.beezlebug.com/ki-sprachbot/server/stt/emotion.php",
+							"protocol": "https",
+							"host": [
+								"one",
+								"beezlebug",
+								"com"
+							],
+							"path": [
+								"ki-sprachbot",
+								"server",
+								"stt",
+								"emotion.php"
 							]
 						}
 					},
@@ -110,11 +145,13 @@
 								{
 									"key": "message",
 									"value": "Wann muss ich arbeiten?",
+									"description": "Textanfrage an den Agent",
 									"type": "text"
 								},
 								{
 									"key": "conversation",
 									"value": "conversationID",
+									"description": "(optional) conversationId für Agent",
 									"type": "text",
 									"disabled": true
 								}
@@ -159,6 +196,7 @@
 								{
 									"key": "speed",
 									"value": "1.5",
+									"description": "Sprachgeschwindigkeit",
 									"type": "text"
 								}
 							]
@@ -197,11 +235,13 @@
 								{
 									"key": "speed",
 									"value": "1.5",
+									"description": "Sprachgeschwindigkeit",
 									"type": "text"
 								},
 								{
 									"key": "speaker",
 									"value": "Tammie Ema",
+									"description": "Stimm-Name",
 									"type": "text"
 								},
 								{

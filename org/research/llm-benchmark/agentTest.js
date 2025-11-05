@@ -130,7 +130,6 @@ async function main() {
   }
   const avgTotal = countTotal ? (sumTotal / countTotal) : NaN;
   log("durschnittliche Latez pro Durchlauf: " + avgTotal.toFixed(3) + " s");
-  //log(`[durschnittliche Latenz pro Lauf: ${isNaN(avgTotal) ? "-" : avgTotal.toFixed(3)} s  (n=${countTotal}/${N_RUNS})`);
   const avgPerQuestion = avgTotal / QUESTIONS.length;
   log("durschnittliche Latenz pro Frage " + avgPerQuestion.toFixed(3) + " s");
   // Datei schreiben

@@ -1,4 +1,5 @@
 <?php
+// Author Robert Heuer, verändert von Daniel Graf
 set_time_limit(120);
 /*
 

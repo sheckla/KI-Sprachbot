@@ -1,3 +1,8 @@
+/*****************************
+ * ===== SilenceDetector =====
+ * Mainly just a value buffer with avg() calcuation
+ *  05.11.2025 Daniel Graf
+*****************************/
 export class SilenceDetector {
   constructor(silenceDurationMs = 5000, threshold = 0.3) {
     this.silenceDurationMs = silenceDurationMs;

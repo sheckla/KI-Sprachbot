@@ -332,7 +332,7 @@ async function startPipeline() {
   // responseTimes.push(response.responseTimes);
   responseTimes.push((await startSTT()).responseTimes);
   // $("stt-text").textContent = "setze stimme zu 3";
-  $("stt-text").textContent = "neustart";
+  // $("stt-text").textContent = "neustart";
   let sttText = document.getElementById("stt-text").textContent.toLowerCase();
   if (checkForCommandsInTranscription(sttText)) {
     stopLedProcessing();
@@ -632,7 +632,7 @@ document.getElementById("push-to-talk-begin").addEventListener("keydown", (event
   }
 });
 
-// app.js (am Ende oder nach Funktionsdefinitionen)
+// html listener workaround
 window.startTTS = startTTS;
 window.startSTT = startSTT;
 window.startEmotionSTT = startEmotionSTT;
@@ -647,4 +647,3 @@ window.clearAll = clearAll;
 window.clearConversation = clearConversation;
 window.updateAudioInputLabel = updateAudioInputLabel;
 window.togglePushToTalk = togglePushToTalk;
-

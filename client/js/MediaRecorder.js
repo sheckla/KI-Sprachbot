@@ -3,6 +3,7 @@
  *  Uses MediaRecorder API
  *  https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
  *  16.09.2025 Daniel Graf
+ *  https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor
  *****************************/
 export class Recorder {
     static worklet = null;
@@ -128,6 +129,7 @@ export class Recorder {
     }
 }
 // --- Worklet Code for Chunking ---
+// https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor
 const processorCode = `
 class MicProcessor extends AudioWorkletProcessor {
   bufferSize = 1280; // 80ms bei 16kHz

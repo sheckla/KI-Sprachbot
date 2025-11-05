@@ -1,4 +1,4 @@
-# needs https://pypi.org/project/rpi5-ws2812/#files
+# based on https://pypi.org/project/rpi5-ws2812
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from rpi5_ws2812.ws2812 import Color, WS2812SpiDriver
